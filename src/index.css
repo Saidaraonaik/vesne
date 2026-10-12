@@ -1,0 +1,15 @@
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+.leaflet-container {
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
