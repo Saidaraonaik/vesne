@@ -47,7 +47,7 @@ export function SubmissionHistoryPage() {
                   <StatusBadge status={submission.status} label={proofStatusLabel(submission.status)} />
                   {submission.verificationRemarks && <Typography variant="body2">Remarks: {submission.verificationRemarks}</Typography>}
                   {submission.rejectionReason && <Typography variant="body2">Rejection reason: {submission.rejectionReason}</Typography>}
-                  {submission.status === 'rejected' && task && (
+                  {submission.status === 'rejected' && task?.status === 'rejected' && (
                     <Button component={RouterLink} to={`/executor/tasks/${task.id}`} variant="contained" sx={{ alignSelf: 'flex-start', mt: 1 }}>Resubmit proof</Button>
                   )}
                 </Stack>

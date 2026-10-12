@@ -4,11 +4,11 @@ import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitl
 import { Controller, useForm } from 'react-hook-form'
 import { Link as RouterLink } from 'react-router-dom'
 import { useApp } from '../../app/app-context.ts'
+import { ImageUploadField } from '../../components/common/ImageUploadField.tsx'
 import { cardRadius } from '../../theme/theme.ts'
 import type { Project, ProjectStatus, ProofType } from '../../types/models.ts'
 import { PROJECT_STATUSES, PROOF_TYPES } from '../../types/models.ts'
 import { fieldBind } from '../../utils/format.ts'
-import { readImageFile } from '../../utils/images.ts'
 
 interface FormValues {
   clientId: string
@@ -73,8 +73,7 @@ export function ProjectFormDialog({
   onClose: () => void
 }) {
   const { data, saveProject } = useApp()
-  const [reference, setReference] = useState<string | undefined>()
-  const [fileError, setFileError] = useState('')
+  const [images, setImages] = useState<string[]>(() => project?.referenceImages ?? [])
   const clients = data.clients
   const { register, handleSubmit, control, reset, getValues, formState: { errors } } = useForm<FormValues>({
     defaultValues: valuesFrom(project),
@@ -97,7 +96,7 @@ export function ProjectFormDialog({
           const saved = saveProject({
             id: project?.id,
             ...values,
-            referenceImageDataUrl: reference,
+            referenceImages: images,
           })
           if (saved) onClose()
         })}
@@ -187,7 +186,7 @@ export function ProjectFormDialog({
             <TextField size="small" type="number" label="Budget (INR)" sx={fieldSx} {...fieldBind(register('budget', { valueAsNumber: true, required: true, min: { value: 0, message: 'Cannot be negative' } }))} error={Boolean(errors.budget)} helperText={errors.budget?.message} />
             <TextField size="small" label="Type of work" sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('workType', { required: 'Type of work is required' }))} error={Boolean(errors.workType)} helperText={errors.workType?.message} />
             <TextField size="small" label="Work locations" sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('workLocations', { required: 'Describe the work locations' }))} error={Boolean(errors.workLocations)} helperText={errors.workLocations?.message} />
-            <TextField size="small" label="Executor instructions" multiline minRows={2} sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('executorInstructions', { required: 'Add instructions for the field team' }))} error={Boolean(errors.executorInstructions)} helperText={errors.executorInstructions?.message} />
+            <TextField size="small" label="Executor instructions" multiline minRows={2} sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('executorInstructions'))} helperText="Optional." />
             <Controller
               name="requiredProofTypes"
               control={control}
@@ -217,30 +216,8 @@ export function ProjectFormDialog({
               )}
             />
             <TextField size="small" label="Internal notes" multiline minRows={2} sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('internalNotes'))} helperText="Admin only." />
-            <Box sx={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Button component="label" variant="outlined" size="small">
-                {reference ? 'Image selected' : 'Reference image'}
-                <input
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0]
-                    if (!file) return
-                    readImageFile(file).then(
-                      (url) => {
-                        setReference(url)
-                        setFileError('')
-                      },
-                      () => setFileError('Could not read that image.'),
-                    )
-                  }}
-                />
-              </Button>
-              {(reference || project?.referenceImages[0]) && (
-                <Box component="img" src={reference || project?.referenceImages[0] || ''} alt="Reference preview" sx={{ width: 72, height: 48, objectFit: 'cover', borderRadius: '8px' }} />
-              )}
-              {fileError && <FormHelperText error>{fileError}</FormHelperText>}
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <ImageUploadField images={images} onChange={setImages} />
             </Box>
           </Box>
         </DialogContent>

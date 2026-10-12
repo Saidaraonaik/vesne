@@ -227,15 +227,20 @@ function ReviewDialog({
               <Fact label="Coordinates" value={formatCoords(submission.lat, submission.lng)} />
               <Fact label="Task instructions" value={task?.instructions} />
             </Box>
-            {task?.referenceImage && (
+            {task && task.referenceImages.length > 0 && (
               <Box>
-                <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Reference image</Typography>
-                <Box
-                  component="img"
-                  src={task.referenceImage}
-                  alt="Reference"
-                  sx={{ width: 140, height: 180, objectFit: 'cover', objectPosition: 'center top', display: 'block', borderRadius: '4px', border: '1px solid #E6EEF2', bgcolor: '#F4F7FA' }}
-                />
+                <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Reference images</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {task.referenceImages.map((src, index) => (
+                    <Box
+                      key={`${index}-${src.slice(-16)}`}
+                      component="img"
+                      src={src}
+                      alt={`Reference ${index + 1}`}
+                      sx={{ width: 140, height: 180, objectFit: 'cover', objectPosition: 'center top', display: 'block', borderRadius: '4px', border: '1px solid #E6EEF2', bgcolor: '#F4F7FA' }}
+                    />
+                  ))}
+                </Box>
               </Box>
             )}
             {prior?.rejectionReason && <Alert severity="warning" sx={{ width: '100%' }}>Previous rejection: {prior.rejectionReason}</Alert>}
@@ -259,6 +264,13 @@ function ReviewDialog({
               onClick={() => setShare({
                 imageDataUrl: submission.imageDataUrl,
                 filename,
+                stamp: {
+                  placeName: submission.placeName || task?.locationName || 'Work location',
+                  address: submission.locationLabel || task?.address || '',
+                  lat: submission.lat,
+                  lng: submission.lng,
+                  at: submission.submittedAt,
+                },
                 message: proofShareMessage({
                   project: project ? `${project.name} / ${project.campaign}` : 'Project',
                   location: task?.locationName ?? 'Work location',

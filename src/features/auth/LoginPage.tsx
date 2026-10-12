@@ -62,7 +62,7 @@ export function LoginPage() {
           </Stack>
         </Box>
         <Typography variant="body2" sx={{ color: '#8A6A52' }}>
-          The workspace starts empty. Add clients, projects, and sites after you sign in.
+          A live Horizon Retail campaign is already loaded. Switch to the client role to watch sites get approved.
         </Typography>
       </Box>
       <Box sx={{ display: 'grid', placeItems: 'center', p: { xs: 2, md: 4 } }}>

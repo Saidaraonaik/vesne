@@ -5,6 +5,7 @@ import { useApp } from '../../app/app-context.ts'
 import { EmptyState } from '../../components/common/EmptyState.tsx'
 import { PageHeader } from '../../components/common/PageHeader.tsx'
 import { StatusBadge } from '../../components/common/StatusBadge.tsx'
+import { ProofImage } from '../../components/proof/ProofImage.tsx'
 import { ShareWhatsAppDialog } from '../../components/proof/ShareWhatsAppDialog.tsx'
 import { panelSx } from '../../theme/theme.ts'
 import { formatCoords, formatDate, formatDateTime } from '../../utils/format.ts'
@@ -17,11 +18,13 @@ export function GalleryPage() {
   const { data, session, notify } = useApp()
   const projects = projectsForClient(data, session?.clientId ?? '')
   const projectIds = new Set(projects.map((project) => project.id))
-  const approved = data.submissions.filter((submission) => {
-    if (submission.status !== 'approved') return false
-    const task = findTask(data, submission.taskId)
-    return Boolean(task && projectIds.has(task.projectId))
-  })
+  const approved = data.submissions
+    .filter((submission) => {
+      if (submission.status !== 'approved') return false
+      const task = findTask(data, submission.taskId)
+      return Boolean(task && projectIds.has(task.projectId))
+    })
+    .sort((a, b) => (b.reviewedAt ?? b.submittedAt).localeCompare(a.reviewedAt ?? a.submittedAt))
   const [projectId, setProjectId] = useState('all')
   const [location, setLocation] = useState('all')
   const [from, setFrom] = useState('')
@@ -60,6 +63,13 @@ export function GalleryPage() {
     return {
       imageDataUrl: submission.imageDataUrl,
       filename,
+      stamp: {
+        placeName: submission.placeName || task?.locationName || 'Work location',
+        address: submission.locationLabel || task?.address || '',
+        lat: submission.lat,
+        lng: submission.lng,
+        at: submission.submittedAt,
+      },
       message: proofShareMessage({
         project: project ? `${project.name} / ${project.campaign}` : 'Project',
         location: task?.locationName ?? 'Work location',
@@ -143,7 +153,19 @@ export function GalleryPage() {
         <DialogContent>
           {selected && (
             <Stack spacing={1}>
-              <Box component="img" src={selected.imageDataUrl} alt="Approved proof" sx={{ width: '100%', borderRadius: 2 }} />
+              <ProofImage
+                src={selected.imageDataUrl}
+                alt="Approved proof"
+                lines={[]}
+                stamp={{
+                  placeName: selected.placeName || findTask(data, selected.taskId)?.locationName || 'Work location',
+                  address: selected.locationLabel,
+                  lat: selected.lat,
+                  lng: selected.lng,
+                  at: selected.submittedAt,
+                }}
+                filename={`VESNE-${findTask(data, selected.taskId)?.taskCode ?? 'proof'}.jpg`}
+              />
               <Typography>Reference: VESNE-{findTask(data, selected.taskId)?.taskCode}</Typography>
               <Typography>Completed {formatDateTime(selected.reviewedAt ?? selected.submittedAt)}</Typography>
               <Typography>Coordinates: {formatCoords(selected.lat, selected.lng)}</Typography>

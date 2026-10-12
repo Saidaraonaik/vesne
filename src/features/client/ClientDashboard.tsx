@@ -66,11 +66,14 @@ export function ClientDashboard() {
   const tasks = tasksForClient(data, clientId)
   const counts = countTasks(tasks)
   const remaining = counts.total - counts.completed
-  const approved = data.submissions.filter((submission) => {
-    if (submission.status !== 'approved') return false
-    const task = findTask(data, submission.taskId)
-    return task ? projects.some((project) => project.id === task.projectId) : false
-  })
+  const approved = data.submissions
+    .filter((submission) => {
+      if (submission.status !== 'approved') return false
+      const task = findTask(data, submission.taskId)
+      return task ? projects.some((project) => project.id === task.projectId) : false
+    })
+    .sort((a, b) => (b.reviewedAt ?? b.submittedAt).localeCompare(a.reviewedAt ?? a.submittedAt))
+  const latest = data.activities[0]
   const points: MapPoint[] = approved.flatMap((submission) => {
     const task = findTask(data, submission.taskId)
     if (!task) return []
@@ -93,7 +96,7 @@ export function ClientDashboard() {
     <Stack spacing={2}>
       <PageHeader
         title="Client dashboard"
-        subtitle="Approved work for your campaigns. Pending locations stay visible as progress, without internal notes."
+        subtitle="Approved work for your campaigns, updating as field teams submit proof."
         crumbs={[{ label: 'Client' }, { label: 'Dashboard' }]}
         actions={
           <>
@@ -102,6 +105,39 @@ export function ClientDashboard() {
           </>
         }
       />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 1.75,
+          py: 1.25,
+          borderRadius: '12px',
+          border: '1px solid #D7EEDD',
+          bgcolor: '#F3FBF6',
+        }}
+      >
+        <Box
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: '#2E9A5B',
+            flexShrink: 0,
+            animation: 'vesne-live 1.6s ease-out infinite',
+            '@keyframes vesne-live': {
+              '0%': { boxShadow: '0 0 0 0 rgba(46, 154, 91, 0.55)' },
+              '100%': { boxShadow: '0 0 0 8px rgba(46, 154, 91, 0)' },
+            },
+          }}
+        />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#1A2633' }}>Live field updates</Typography>
+          <Typography sx={{ fontSize: 13, color: '#5E7082' }}>
+            {latest ? `${latest.actor} · ${latest.message}` : 'Waiting for the next site update.'}
+          </Typography>
+        </Box>
+      </Box>
       <Box sx={kpiGridSx}>
         <KpiCard tone="blue" label="Total projects" value={projects.length} icon={<FolderKanban size={16} />} />
         <KpiCard tone="green" label="Work locations" value={counts.total} icon={<MapPinned size={16} />} />

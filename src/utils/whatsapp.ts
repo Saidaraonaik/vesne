@@ -1,7 +1,10 @@
+import type { GpsStamp } from './gpsStamp.ts'
+
 export interface ProofShare {
   message: string
   imageDataUrl: string
   filename: string
+  stamp?: GpsStamp
 }
 
 export function proofShareMessage(input: {

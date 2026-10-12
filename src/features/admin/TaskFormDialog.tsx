@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, FormGroup, FormHelperText, MenuItem, Stack, TextField } from '@mui/material'
 import { Controller, useForm } from 'react-hook-form'
 import { useApp } from '../../app/app-context.ts'
+import { ImageUploadField } from '../../components/common/ImageUploadField.tsx'
 import type { ProofType, Task } from '../../types/models.ts'
 import { PROOF_TYPES } from '../../types/models.ts'
+import { forwardGeocode, placeQuery } from '../../utils/geocode.ts'
 import { fieldBind } from '../../utils/format.ts'
-import { readImageFile } from '../../utils/images.ts'
 
 interface FormValues {
   projectId: string
@@ -50,23 +51,69 @@ export function TaskFormDialog({
   onClose: () => void
 }) {
   const { data, saveTask } = useApp()
-  const [reference, setReference] = useState<string | undefined>()
-  const [fileError, setFileError] = useState('')
-  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
+  const [images, setImages] = useState<string[]>(() => task?.referenceImages ?? [])
+  const [lookup, setLookup] = useState<'idle' | 'loading' | 'found' | 'missing'>('idle')
+  const { register, handleSubmit, control, watch, setValue, setError, formState: { errors } } = useForm<FormValues>({
     defaultValues: valuesFrom(task, presetProjectId),
   })
+  const locationName = watch('locationName')
+  const address = watch('address')
+  const query = placeQuery(locationName, address)
+  const savedQuery = useRef(query)
+
+  useEffect(() => {
+    if (query === savedQuery.current || query.length < 3) return
+    let cancelled = false
+    setLookup('loading')
+    setValue('lat', '')
+    setValue('lng', '')
+    const timer = window.setTimeout(() => {
+      forwardGeocode(query).then(
+        (hit) => {
+          if (cancelled) return
+          setValue('lat', Number(hit.lat.toFixed(6)), { shouldValidate: true })
+          setValue('lng', Number(hit.lng.toFixed(6)), { shouldValidate: true })
+          setLookup('found')
+        },
+        () => {
+          if (!cancelled) setLookup('missing')
+        },
+      )
+    }, 600)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [query, setValue])
   const locked = task?.status === 'completed' || task?.status === 'awaiting_verification' || task?.status === 'rejected'
   const executors = data.executors.filter((executor) => executor.status === 'active' || executor.id === task?.executorId)
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <Form onSubmit={handleSubmit((values) => {
+      <Form onSubmit={handleSubmit(async (values) => {
+        let lat = Number(values.lat)
+        let lng = Number(values.lng)
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          const nextQuery = placeQuery(values.locationName, values.address)
+          try {
+            const hit = await forwardGeocode(nextQuery)
+            lat = hit.lat
+            lng = hit.lng
+            setValue('lat', Number(lat.toFixed(6)))
+            setValue('lng', Number(lng.toFixed(6)))
+            setLookup('found')
+          } catch {
+            setLookup('missing')
+            setError('lat', { message: 'Enter a fuller address so the coordinates can be found.' })
+            return
+          }
+        }
         const saved = saveTask({
           id: task?.id,
           ...values,
-          lat: Number(values.lat),
-          lng: Number(values.lng),
-          referenceImageDataUrl: reference,
+          lat,
+          lng,
+          referenceImages: images,
           status: locked ? undefined : values.status,
         })
         if (saved) onClose()
@@ -89,9 +136,17 @@ export function TaskFormDialog({
             <TextField label="Work location" {...fieldBind(register('locationName', { required: 'Location name is required' }))} error={Boolean(errors.locationName)} helperText={errors.locationName?.message} />
             <TextField label="Address" {...fieldBind(register('address', { required: 'Address is required' }))} error={Boolean(errors.address)} helperText={errors.address?.message} />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField type="number" label="Latitude" fullWidth {...fieldBind(register('lat', { valueAsNumber: true, required: 'Latitude is required' }))} slotProps={{ htmlInput: { step: '0.0001' } }} />
-              <TextField type="number" label="Longitude" fullWidth {...fieldBind(register('lng', { valueAsNumber: true, required: 'Longitude is required' }))} slotProps={{ htmlInput: { step: '0.0001' } }} />
+              <TextField type="number" label="Latitude" fullWidth {...fieldBind(register('lat', { valueAsNumber: true }))} slotProps={{ htmlInput: { step: '0.0001', readOnly: true } }} error={Boolean(errors.lat)} />
+              <TextField type="number" label="Longitude" fullWidth {...fieldBind(register('lng', { valueAsNumber: true }))} slotProps={{ htmlInput: { step: '0.0001', readOnly: true } }} />
             </Stack>
+            <FormHelperText error={lookup === 'missing' || Boolean(errors.lat)}>
+              {lookup === 'loading' && 'Looking up coordinates from the work location and address…'}
+              {lookup === 'found' && 'Coordinates filled automatically from the work location and address.'}
+              {lookup === 'missing' && (errors.lat?.message || 'Could not find that place. Add the street and city.')}
+              {lookup === 'idle' && (task
+                ? 'Saved coordinates. Change the work location or address to look them up again.'
+                : 'Coordinates fill in automatically when you enter the work location or address.')}
+            </FormHelperText>
             <TextField label="Task instructions" multiline minRows={3} {...fieldBind(register('instructions', { required: 'Add task instructions' }))} error={Boolean(errors.instructions)} helperText={errors.instructions?.message} />
             <Controller
               name="executorId"
@@ -145,21 +200,7 @@ export function TaskFormDialog({
                 </FormGroup>
               )}
             />
-            <Button component="label" variant="outlined">
-              {reference ? 'Reference image selected' : 'Upload reference image'}
-              <input hidden type="file" accept="image/*" onChange={(event) => {
-                const file = event.target.files?.[0]
-                if (!file) return
-                readImageFile(file).then(
-                  (url) => {
-                    setReference(url)
-                    setFileError('')
-                  },
-                  () => setFileError('Could not read that image.'),
-                )
-              }} />
-            </Button>
-            {fileError && <FormHelperText error>{fileError}</FormHelperText>}
+            <ImageUploadField images={images} onChange={setImages} />
             <FormHelperText>
               New tasks start as Assigned. Submitted, approved, rejected, and completed states change through proof submission and verification.
             </FormHelperText>

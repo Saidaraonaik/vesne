@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Alert, Snackbar } from '@mui/material'
 import { CssBaseline, ThemeProvider } from '@mui/material'
@@ -7,7 +7,8 @@ import { AppContext } from './app-context.ts'
 import type { AppContextValue } from './app-context.ts'
 import { homePath, sessionFromEmail, sessionFromRole } from '../data/demoUsers.ts'
 import { DEMO_PASSWORD } from '../data/demoUsers.ts'
-import { createEmptyData } from '../data/seed.ts'
+import { advanceLiveDemo } from '../data/liveDemo.ts'
+import { createDemoData, createEmptyData, workspaceIsEmpty } from '../data/seed.ts'
 import {
   reviewProof,
   saveClient,
@@ -39,17 +40,28 @@ function resolveSession(session: Session | null, data: AppData): Session | null 
   return session
 }
 
+function loadInitialData(): AppData {
+  const stored = loadData()
+  if (stored && !workspaceIsEmpty(stored)) return stored
+  const demo = createDemoData()
+  saveData(demo)
+  return demo
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
-  const [data, setData] = useState<AppData>(() => loadData() ?? createEmptyData())
+  const [data, setData] = useState<AppData>(loadInitialData)
+  const dataRef = useRef(data)
   const [session, setSession] = useState<Session | null>(() => loadSession())
   const [notice, setNotice] = useState<{ message: string; severity: NoticeSeverity } | null>(null)
+  dataRef.current = data
 
   const notify = (message: string, severity: NoticeSeverity = 'success') => {
     setNotice({ message, severity })
   }
 
   const commit = (next: AppData, message?: string, severity: NoticeSeverity = 'success') => {
+    dataRef.current = next
     setData(next)
     const saved = saveData(next)
     if (!saved.ok) {
@@ -63,7 +75,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== 'vesne.data.v2' || !event.newValue) return
       try {
-        setData(JSON.parse(event.newValue) as AppData)
+        const next = JSON.parse(event.newValue) as AppData
+        dataRef.current = next
+        setData(next)
       } catch {
         /* ignore malformed storage from another tab */
       }
@@ -71,6 +85,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
   }, [])
+
+  useEffect(() => {
+    if (session?.role !== 'client') return
+    const timer = window.setInterval(() => {
+      if (document.hidden) return
+      const next = advanceLiveDemo(dataRef.current)
+      if (!next) return
+      dataRef.current = next
+      setData(next)
+      const saved = saveData(next)
+      if (!saved.ok) setNotice({ message: saved.error, severity: 'error' })
+    }, 12000)
+    return () => window.clearInterval(timer)
+  }, [session])
 
   const apply = (result: MutationResult, success: string) => {
     if (!result.ok) {

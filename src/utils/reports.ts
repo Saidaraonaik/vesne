@@ -22,6 +22,11 @@ export interface ReportRow {
   quantity: string
   imageDataUrl: string
   imageName: string
+  lat?: number
+  lng?: number
+  capturedAt?: string
+  placeName?: string
+  proofAddress?: string
 }
 
 export function buildReportRows(
@@ -70,6 +75,11 @@ export function buildReportRows(
         quantity: String(task.quantity),
         imageDataUrl: showProof && proof?.imageDataUrl ? proof.imageDataUrl : '',
         imageName: showProof && proof?.imageDataUrl ? `VESNE-${task.taskCode}.jpg` : '',
+        lat: proof?.lat,
+        lng: proof?.lng,
+        capturedAt: proof?.submittedAt,
+        placeName: proof?.placeName || task.locationName,
+        proofAddress: proof?.locationLabel || task.address,
       }
     })
     .sort((a, b) => a.taskCode.localeCompare(b.taskCode))

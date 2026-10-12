@@ -94,6 +94,15 @@ export function ReportView({
   const shareRow = (row: ReportRow) => {
     if (!row.imageDataUrl) return
     setShare({
+      stamp: row.lat != null && row.lng != null && row.capturedAt
+        ? {
+            placeName: row.placeName || row.location,
+            address: row.proofAddress || row.address,
+            lat: row.lat,
+            lng: row.lng,
+            at: row.capturedAt,
+          }
+        : undefined,
       message: proofShareMessage({
         project: `${row.project} / ${row.campaign}`,
         location: row.location,

@@ -1,4 +1,4 @@
-import type { AppData, Session } from '../types/models.ts'
+import type { AppData, Session, Task } from '../types/models.ts'
 
 const DATA_KEY = 'vesne.data.v2'
 const LEGACY_DATA_KEY = 'vesne.demo.data.v1'
@@ -21,7 +21,23 @@ export function loadData(): AppData | null {
     ) {
       return null
     }
-    return parsed
+    return {
+      ...parsed,
+      projects: parsed.projects.map((project) => ({
+        ...project,
+        referenceImages: Array.isArray(project.referenceImages) ? project.referenceImages : [],
+      })),
+      tasks: parsed.tasks.map((task) => {
+        const record = task as Task & { referenceImage?: string }
+        const { referenceImage, ...rest } = record
+        const referenceImages = Array.isArray(record.referenceImages)
+          ? record.referenceImages
+          : referenceImage
+            ? [referenceImage]
+            : []
+        return { ...rest, referenceImages }
+      }),
+    }
   } catch {
     return null
   }

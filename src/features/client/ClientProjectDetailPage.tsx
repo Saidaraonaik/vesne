@@ -34,6 +34,13 @@ export function ClientProjectDetailPage() {
     return {
       imageDataUrl: approved.imageDataUrl,
       filename,
+      stamp: {
+        placeName: approved.placeName || task.locationName,
+        address: approved.locationLabel || task.address,
+        lat: approved.lat,
+        lng: approved.lng,
+        at: approved.submittedAt,
+      },
       message: proofShareMessage({
         project: `${project.name} / ${project.campaign}`,
         location: task.locationName,

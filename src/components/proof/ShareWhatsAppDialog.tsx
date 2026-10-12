@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material'
 import { Download, Share2 } from 'lucide-react'
 import { downloadBlob } from '../../utils/download.ts'
+import { renderGpsStamp } from '../../utils/gpsStamp.ts'
+import { reverseGeocode } from '../../utils/geocode.ts'
 import { dataUrlBytes, toJpegDataUrl } from '../../utils/images.ts'
 import { whatsAppUrl, type ProofShare } from '../../utils/whatsapp.ts'
 
@@ -19,11 +21,42 @@ export function ShareWhatsAppDialog({
   const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [stamped, setStamped] = useState('')
   const message = share?.message ?? ''
+  const preview = stamped || share?.imageDataUrl || ''
+
+  useEffect(() => {
+    if (!open || !share?.imageDataUrl || !share.stamp) {
+      setStamped('')
+      return
+    }
+    let cancelled = false
+    const source = share.imageDataUrl
+    const stamp = share.stamp
+    setStamped('')
+    ;(async () => {
+      let next = stamp
+      try {
+        const place = await reverseGeocode(stamp.lat, stamp.lng)
+        next = { ...stamp, placeName: place.placeName, address: place.address }
+      } catch {
+        /* keep the saved place and address */
+      }
+      try {
+        const url = await renderGpsStamp(source, next)
+        if (!cancelled) setStamped(url)
+      } catch {
+        if (!cancelled) setStamped('')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [open, share])
 
   const prepareFile = async () => {
     if (!share?.imageDataUrl) throw new Error('This record has no proof image to share.')
-    const jpeg = await toJpegDataUrl(share.imageDataUrl)
+    const jpeg = stamped || (await toJpegDataUrl(share.imageDataUrl))
     return new File([dataUrlBytes(jpeg)], share.filename, { type: 'image/jpeg' })
   }
 
@@ -80,10 +113,13 @@ export function ShareWhatsAppDialog({
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2" color="text.secondary">
-            This uses the current photograph stored in this browser. WhatsApp’s link carries the text. Use Share image or Download image to send the photograph itself.
+            The shared photo includes a location card with the place name, address, coordinates, and time.
           </Typography>
-          {share?.imageDataUrl && (
-            <Box component="img" src={share.imageDataUrl} alt="Proof to share" sx={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 2 }} />
+          {share?.stamp && !stamped && (
+            <Typography variant="body2" color="text.secondary">Adding the location card…</Typography>
+          )}
+          {preview && (
+            <Box component="img" src={preview} alt="Proof to share" sx={{ width: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 2, bgcolor: '#111' }} />
           )}
           <TextField
             label="Phone number (optional)"
@@ -102,14 +138,14 @@ export function ShareWhatsAppDialog({
       <DialogActions sx={{ px: 3, pb: 2, flexWrap: 'wrap', gap: 1 }}>
         <Button onClick={onClose}>Close</Button>
         <Button
-          disabled={busy || !share?.imageDataUrl}
+          disabled={busy || !share?.imageDataUrl || Boolean(share?.stamp && !stamped)}
           startIcon={<Download size={16} />}
           onClick={() => void downloadImage()}
         >
           Download image
         </Button>
         <Button
-          disabled={busy || !share?.imageDataUrl}
+          disabled={busy || !share?.imageDataUrl || Boolean(share?.stamp && !stamped)}
           startIcon={<Share2 size={16} />}
           onClick={() => void shareImage()}
         >

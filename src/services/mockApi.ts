@@ -55,7 +55,7 @@ export interface ProjectInput {
   budget: number
   internalNotes: string
   status: ProjectStatus
-  referenceImageDataUrl?: string
+  referenceImages?: string[]
 }
 
 export function saveProject(data: AppData, input: ProjectInput, actor: string): MutationResult {
@@ -83,9 +83,7 @@ export function saveProject(data: AppData, input: ProjectInput, actor: string): 
       budget: input.budget,
       internalNotes: input.internalNotes.trim(),
       status: input.status,
-      referenceImages: input.referenceImageDataUrl
-        ? [input.referenceImageDataUrl]
-        : existing.referenceImages,
+      referenceImages: input.referenceImages ?? existing.referenceImages,
     }
     return ok({
       ...data,
@@ -106,7 +104,7 @@ export function saveProject(data: AppData, input: ProjectInput, actor: string): 
     executorInstructions: input.executorInstructions.trim(),
     requiredProofTypes: input.requiredProofTypes,
     targetDate: input.targetDate,
-    referenceImages: input.referenceImageDataUrl ? [input.referenceImageDataUrl] : [],
+    referenceImages: input.referenceImages ?? [],
     budget: input.budget,
     internalNotes: input.internalNotes.trim(),
     status: input.status,
@@ -132,7 +130,7 @@ export interface TaskInput {
   quantity: number
   requiredProofTypes: ProofType[]
   status?: Extract<TaskStatus, 'assigned' | 'in_progress'>
-  referenceImageDataUrl?: string
+  referenceImages?: string[]
 }
 
 export function saveTask(data: AppData, input: TaskInput, actor: string): MutationResult {
@@ -166,7 +164,7 @@ export function saveTask(data: AppData, input: TaskInput, actor: string): Mutati
       targetDate: input.targetDate,
       quantity: input.quantity,
       requiredProofTypes: input.requiredProofTypes,
-      referenceImage: input.referenceImageDataUrl ?? existing.referenceImage,
+      referenceImages: input.referenceImages ?? existing.referenceImages,
       status:
         existing.status === 'assigned' || existing.status === 'in_progress'
           ? input.status ?? existing.status
@@ -200,7 +198,7 @@ export function saveTask(data: AppData, input: TaskInput, actor: string): Mutati
     targetDate: input.targetDate,
     quantity: input.quantity,
     requiredProofTypes: input.requiredProofTypes,
-    referenceImage: input.referenceImageDataUrl ?? '',
+    referenceImages: input.referenceImages ?? [],
     status: 'assigned',
     createdAt: now,
   }
@@ -353,9 +351,11 @@ export interface SubmitProofInput {
   taskId: string
   executorId: string
   imageDataUrl: string
+  imageDataUrls?: string[]
   lat: number
   lng: number
   locationLabel: string
+  placeName?: string
   gpsSource: GpsSource
   documentName?: string
   videoName?: string
@@ -386,9 +386,11 @@ export function submitProof(data: AppData, input: SubmitProofInput, actor: strin
     taskId: task.id,
     executorId: input.executorId,
     imageDataUrl: input.imageDataUrl,
+    imageDataUrls: input.imageDataUrls?.length ? input.imageDataUrls : [input.imageDataUrl],
     lat: input.lat,
     lng: input.lng,
     locationLabel: input.locationLabel.trim() || task.address,
+    placeName: input.placeName?.trim() || undefined,
     gpsSource: input.gpsSource,
     submittedAt: new Date().toISOString(),
     status: 'awaiting_verification' as const,

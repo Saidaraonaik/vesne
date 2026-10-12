@@ -83,23 +83,28 @@ export function TaskDetailPage() {
             <Fact label="Status" value={<StatusBadge status={task.status} label={taskStatusLabel(task.status)} />} />
           </Box>
           <Box sx={{ flex: '0 0 auto' }}>
-            <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Reference image</Typography>
-            {task.referenceImage ? (
-              <Box
-                component="img"
-                src={task.referenceImage}
-                alt="Reference artwork"
-                sx={{
-                  width: 140,
-                  height: 180,
-                  objectFit: 'cover',
-                  objectPosition: 'center top',
-                  display: 'block',
-                  borderRadius: '4px',
-                  border: '1px solid #E6EEF2',
-                  bgcolor: '#F4F7FA',
-                }}
-              />
+            <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Reference images</Typography>
+            {task.referenceImages.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {task.referenceImages.map((src, index) => (
+                  <Box
+                    key={`${index}-${src.slice(-16)}`}
+                    component="img"
+                    src={src}
+                    alt={`Reference artwork ${index + 1}`}
+                    sx={{
+                      width: 140,
+                      height: 180,
+                      objectFit: 'cover',
+                      objectPosition: 'center top',
+                      display: 'block',
+                      borderRadius: '4px',
+                      border: '1px solid #E6EEF2',
+                      bgcolor: '#F4F7FA',
+                    }}
+                  />
+                ))}
+              </Box>
             ) : (
               <Box
                 sx={{
@@ -118,7 +123,7 @@ export function TaskDetailPage() {
                   lineHeight: 1.4,
                 }}
               >
-                No reference image
+                No reference images
               </Box>
             )}
           </Box>
@@ -138,6 +143,13 @@ export function TaskDetailPage() {
                   setShare({
                     imageDataUrl: latest.imageDataUrl,
                     filename,
+                    stamp: {
+                      placeName: latest.placeName || task.locationName,
+                      address: latest.locationLabel || task.address,
+                      lat: latest.lat,
+                      lng: latest.lng,
+                      at: latest.submittedAt,
+                    },
                     message: proofShareMessage({
                       project: project ? `${project.name} / ${project.campaign}` : 'Project',
                       location: task.locationName,
@@ -159,7 +171,14 @@ export function TaskDetailPage() {
                 src={latest.imageDataUrl}
                 alt={`${task.taskCode} proof`}
                 filename={`${task.taskCode}-proof.jpg`}
-                lines={['Vesne', task.taskCode, formatDateTime(latest.submittedAt), formatCoords(latest.lat, latest.lng), executor?.name ?? 'Executor']}
+                lines={[]}
+                stamp={{
+                  placeName: latest.placeName || task.locationName,
+                  address: latest.locationLabel || task.address,
+                  lat: latest.lat,
+                  lng: latest.lng,
+                  at: latest.submittedAt,
+                }}
                 onDownloaded={() => notify('Watermarked image downloaded.', 'success')}
                 onFailed={(message) => notify(message, 'error')}
               />

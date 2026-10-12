@@ -110,7 +110,7 @@ export function ProjectDetailPage() {
           <DetailField label="Budget (INR)" value={formatInr(project.budget)} />
           <DetailField wide label="Type of work" value={project.workType} />
           <DetailField wide label="Work locations" value={project.workLocations} />
-          <DetailField wide label="Executor instructions" value={project.executorInstructions} />
+          <DetailField wide label="Executor instructions" value={project.executorInstructions || '—'} />
           <DetailField
             wide
             label="Required proof"
@@ -123,11 +123,17 @@ export function ProjectDetailPage() {
             }
           />
           <DetailField wide label="Internal notes" value={project.internalNotes || '—'} />
-          {project.referenceImages[0] && (
+          {project.referenceImages.length > 0 && (
             <DetailField
               wide
-              label="Reference image"
-              value={<Box component="img" src={project.referenceImages[0]} alt="Project reference" sx={{ width: 160, height: 96, objectFit: 'cover', borderRadius: '8px' }} />}
+              label="Reference images"
+              value={
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {project.referenceImages.map((src, index) => (
+                    <Box key={`${index}-${src.slice(-16)}`} component="img" src={src} alt={`Project reference ${index + 1}`} sx={{ width: 160, height: 96, objectFit: 'cover', borderRadius: '8px' }} />
+                  ))}
+                </Box>
+              }
             />
           )}
         </Box>

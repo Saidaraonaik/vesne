@@ -1,15 +1,17 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Alert, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Step, StepLabel, Stepper, TextField, Typography } from '@mui/material'
 import { Box } from '@mui/material'
-import { Camera, LocateFixed, Upload } from 'lucide-react'
+import { Camera, LocateFixed } from 'lucide-react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../app/app-context.ts'
 import { EmptyState } from '../../components/common/EmptyState.tsx'
+import { ImageUploadField } from '../../components/common/ImageUploadField.tsx'
 import { PageHeader } from '../../components/common/PageHeader.tsx'
 import { StatusBadge } from '../../components/common/StatusBadge.tsx'
 import { SectionCard } from '../../components/layout/AppShell.tsx'
 import { ProofImage } from '../../components/proof/ProofImage.tsx'
-import { formatCoords, formatDate, formatDateTime } from '../../utils/format.ts'
+import { formatDate, formatDateTime } from '../../utils/format.ts'
+import { reverseGeocode } from '../../utils/geocode.ts'
 import { readImageFile } from '../../utils/images.ts'
 import { findExecutor, findProject, latestSubmission } from '../../utils/relations.ts'
 import { gpsSourceLabel, taskStatusLabel } from '../../utils/status.ts'
@@ -38,18 +40,50 @@ export function TaskExecutionPage() {
   const navigate = useNavigate()
   const { data, session, startTask, submitProof, notify } = useApp()
   const task = data.tasks.find((item) => item.id === taskId && item.executorId === session?.executorId)
-  const [image, setImage] = useState('')
-  const [lat, setLat] = useState<number | null>(null)
-  const [lng, setLng] = useState<number | null>(null)
-  const [gpsSource, setGpsSource] = useState<GpsSource | null>(null)
+  const priorProof = task?.status === 'rejected' ? latestSubmission(data, task.id) : undefined
+  const [images, setImages] = useState<string[]>([])
+  const [lat, setLat] = useState<number | null>(priorProof?.lat ?? null)
+  const [lng, setLng] = useState<number | null>(priorProof?.lng ?? null)
+  const [gpsSource, setGpsSource] = useState<GpsSource | null>(priorProof?.gpsSource ?? null)
   const [gpsError, setGpsError] = useState('')
   const [address, setAddress] = useState(task?.address ?? '')
+  const [placeName, setPlaceName] = useState('')
+  const [lookingUp, setLookingUp] = useState(false)
+  const lookedUp = useRef('')
   const [documentName, setDocumentName] = useState('')
   const [videoName, setVideoName] = useState('')
   const [formError, setFormError] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [capturedAt, setCapturedAt] = useState<string | null>(null)
+  const storedProof = task ? latestSubmission(data, task.id) : undefined
+  const proofLocked = task?.status === 'awaiting_verification' || task?.status === 'completed'
+  const lookupLat = proofLocked && storedProof ? storedProof.lat : lat
+  const lookupLng = proofLocked && storedProof ? storedProof.lng : lng
+
+  useEffect(() => {
+    if (lookupLat == null || lookupLng == null) return
+    const key = `${lookupLat.toFixed(5)},${lookupLng.toFixed(5)}`
+    if (lookedUp.current === key) return
+    let cancelled = false
+    setLookingUp(true)
+    reverseGeocode(lookupLat, lookupLng).then(
+      (place) => {
+        if (cancelled) return
+        lookedUp.current = key
+        setPlaceName(place.placeName)
+        setAddress(place.address)
+        setLookingUp(false)
+      },
+      () => {
+        if (cancelled) return
+        setLookingUp(false)
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [lookupLat, lookupLng])
 
   if (!task || !session?.executorId) {
     return <EmptyState title="Task unavailable" body="This task is not assigned to the signed-in executor." action={<Button component={RouterLink} to="/executor/tasks">Back to my tasks</Button>} />
@@ -59,19 +93,31 @@ export function TaskExecutionPage() {
   const executor = findExecutor(data, task.executorId)
   const latest = latestSubmission(data, task.id)
   const locked = task.status === 'awaiting_verification' || task.status === 'completed'
+  const resubmit = task.status === 'rejected'
   const step = task.status === 'completed' ? 4 : task.status === 'rejected' ? 3 : task.status === 'awaiting_verification' ? 3 : task.status === 'in_progress' ? 1 : 0
+  const shownPlace = placeName || (lookingUp ? 'Fetching location name…' : task.locationName)
+  const shownAddress = address || latest?.locationLabel || task.address
+  const stampLat = lat ?? latest?.lat
+  const stampLng = lng ?? latest?.lng
+  const stampWhen = capturedAt ?? latest?.submittedAt
   const lines = [
     'Vesne',
-    capturedAt ? formatDateTime(capturedAt) : 'Date not captured yet',
-    lat != null && lng != null ? formatCoords(lat, lng) : 'Location not captured',
+    shownPlace,
+    shownAddress,
+    stampLat != null && stampLng != null ? `Lat ${stampLat.toFixed(5)}°  Long ${stampLng.toFixed(5)}°` : 'Location not captured',
+    stampWhen ? formatDateTime(stampWhen) : 'Date not captured yet',
     `${executor?.name ?? session.name} · ${executor?.executorCode ?? ''}`,
     task.taskCode,
   ]
+  const proofStamp = stampLat != null && stampLng != null
+    ? { placeName: shownPlace, address: shownAddress, lat: stampLat, lng: stampLng, at: stampWhen ?? new Date().toISOString() }
+    : undefined
 
   const onImage = async (file: File | undefined) => {
     if (!file) return
     try {
-      setImage(await readImageFile(file))
+      const next = await readImageFile(file)
+      setImages((current) => (resubmit ? [...current, next] : [next]))
       setCapturedAt(new Date().toISOString())
       setFormError('')
     } catch (error) {
@@ -98,8 +144,8 @@ export function TaskExecutionPage() {
   }
 
   const submit = () => {
-    if (task.requiredProofTypes.includes('photo') && !image) {
-      setFormError('Add a proof photograph before submitting.')
+    if (task.requiredProofTypes.includes('photo') && images.length === 0) {
+      setFormError(resubmit ? 'Upload at least one new image before resubmitting.' : 'Add a proof photograph before submitting.')
       return
     }
     if (task.requiredProofTypes.includes('document') && !documentName) {
@@ -119,10 +165,12 @@ export function TaskExecutionPage() {
       const ok = submitProof({
         taskId: task.id,
         executorId: session.executorId!,
-        imageDataUrl: image,
+        imageDataUrl: images[0] ?? '',
+        imageDataUrls: images,
         lat,
         lng,
         locationLabel: address,
+        placeName: placeName || undefined,
         gpsSource,
         documentName: documentName || undefined,
         videoName: videoName || undefined,
@@ -171,53 +219,81 @@ export function TaskExecutionPage() {
             <Fact label="Campaign" value={project?.campaign} />
             <Fact label="Instructions" value={task.instructions} />
             {project?.executorInstructions ? <Fact label="Project instructions" value={project.executorInstructions} /> : null}
-            <Fact label="Address" value={task.address} />
+            <Fact label="Location name" value={shownPlace} />
+            <Fact label="Address" value={shownAddress} />
             <Fact label="Target" value={formatDate(task.targetDate)} />
             <Fact label="Required proof" value={task.requiredProofTypes.join(', ')} />
             <Fact label="Executor" value={executor ? `${executor.name} · ${executor.executorCode}` : ''} />
           </Box>
           <Box sx={{ mt: 2 }}>
-            <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Reference image</Typography>
-            {task.referenceImage ? (
-              <Box
-                component="img"
-                src={task.referenceImage}
-                alt="Reference photograph"
-                sx={{ ...passportFrameSx, objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
-              />
+            <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Reference images</Typography>
+            {task.referenceImages.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {task.referenceImages.map((src, index) => (
+                  <Box
+                    key={`${index}-${src.slice(-16)}`}
+                    component="img"
+                    src={src}
+                    alt={`Reference photograph ${index + 1}`}
+                    sx={{ ...passportFrameSx, objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+                  />
+                ))}
+              </Box>
             ) : (
               <Box sx={{ ...passportFrameSx, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', px: 1, color: '#5E7082', fontSize: 12, lineHeight: 1.4 }}>
-                No reference image
+                No reference images
               </Box>
             )}
           </Box>
         </SectionCard>
-        <SectionCard title={locked ? 'Submitted proof' : 'Capture proof'}>
+        <SectionCard title={resubmit ? 'Resubmit proof' : locked ? 'Submitted proof' : 'Capture proof'}>
           {locked && latest ? (
-            <ProofImage
-              src={latest.imageDataUrl}
-              alt="Submitted proof"
-              lines={['Vesne', formatDateTime(latest.submittedAt), formatCoords(latest.lat, latest.lng), `${executor?.name} · ${executor?.executorCode}`, task.taskCode]}
-              filename={`${task.taskCode}-proof.jpg`}
-              onDownloaded={() => notify('Watermarked image downloaded.', 'success')}
-              onFailed={(message) => notify(message, 'error')}
-            />
+            <Stack spacing={1.5}>
+              {(latest.imageDataUrls?.length ? latest.imageDataUrls : [latest.imageDataUrl]).map((src, index) => (
+                <ProofImage
+                  key={`${latest.id}-${index}`}
+                  src={src}
+                  alt="Submitted proof"
+                  lines={lines}
+                  stamp={proofStamp}
+                  filename={`${task.taskCode}-proof-${index + 1}.jpg`}
+                  onDownloaded={() => notify('Watermarked image downloaded.', 'success')}
+                  onFailed={(message) => notify(message, 'error')}
+                />
+              ))}
+            </Stack>
           ) : (
             <Stack spacing={1.5}>
               {task.status === 'assigned' && (
                 <Button variant="outlined" onClick={() => startTask(task.id)} sx={{ alignSelf: 'flex-start' }}>Start task</Button>
               )}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              {resubmit && latest && (
+                <Box>
+                  <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Rejected photo</Typography>
+                  <Box component="img" src={latest.imageDataUrl} alt="Rejected proof" sx={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 1.5, display: 'block' }} />
+                </Box>
+              )}
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: 'center' }}>
                 <Button component="label" variant="contained" startIcon={<Camera size={16} />}>
-                  Take photo
+                  {resubmit ? 'Take a new photo' : 'Take photo'}
                   <input hidden type="file" accept="image/*" capture="environment" onChange={(event) => void onImage(event.target.files?.[0])} />
                 </Button>
-                <Button component="label" variant="outlined" startIcon={<Upload size={16} />}>
-                  Upload from device
-                  <input hidden type="file" accept="image/*" onChange={(event) => void onImage(event.target.files?.[0])} />
-                </Button>
-                {image && <Button color="inherit" onClick={() => setImage('')}>Remove image</Button>}
+                {images.length > 0 && (
+                  <Button color="inherit" onClick={() => setImages([])}>Remove photo</Button>
+                )}
               </Stack>
+              {resubmit && (
+                <ImageUploadField
+                  images={images}
+                  onChange={(next) => {
+                    if (next.length > images.length) setCapturedAt(new Date().toISOString())
+                    setImages(next)
+                    setFormError('')
+                  }}
+                  label="Upload images to resubmit"
+                  hint="Add one or more new photos. The rejected photo stays above for comparison."
+                />
+              )}
               {task.requiredProofTypes.includes('document') && (
                 <Button component="label" variant="outlined">
                   {documentName ? `Document: ${documentName}` : 'Attach document'}
@@ -237,21 +313,24 @@ export function TaskExecutionPage() {
               {gpsError && <Alert severity="warning">{gpsError}</Alert>}
               <TextField label="Latitude" value={lat ?? ''} disabled helperText={gpsSource ? gpsSourceLabel(gpsSource) : 'Not captured yet'} />
               <TextField label="Longitude" value={lng ?? ''} disabled />
-              <TextField label="Location / address" value={address} onChange={(event) => setAddress(event.target.value)} />
+              <TextField label="Location name" value={placeName} onChange={(event) => setPlaceName(event.target.value)} helperText={lookingUp ? 'Fetching location name from GPS…' : 'Filled from the captured coordinates'} />
+              <TextField label="Address" value={address} onChange={(event) => setAddress(event.target.value)} helperText={lookingUp ? 'Fetching address from GPS…' : 'Place, region, and postcode from the captured coordinates'} />
               <TextField label="Capture date and time" value={capturedAt ? formatDateTime(capturedAt) : 'Set when you add a photo or location'} disabled />
-              {image && (
+              {images.map((src, index) => (
                 <ProofImage
-                  src={image}
-                  alt="Proof preview"
+                  key={`${index}-${src.slice(-16)}`}
+                  src={src}
+                  alt={`Proof preview ${index + 1}`}
                   lines={lines}
-                  filename={`${task.taskCode}-proof.jpg`}
+                  stamp={proofStamp}
+                  filename={`${task.taskCode}-proof-${index + 1}.jpg`}
                   onDownloaded={() => notify('Watermarked image downloaded.', 'success')}
                   onFailed={(message) => notify(message, 'error')}
                 />
-              )}
+              ))}
               {formError && <Alert severity="error">{formError}</Alert>}
               <Button variant="contained" size="large" disabled={busy} onClick={submit}>
-                {busy ? 'Submitting…' : 'Submit for verification'}
+                {busy ? (resubmit ? 'Resubmitting…' : 'Submitting…') : resubmit ? 'Resubmit proof' : 'Submit for verification'}
               </Button>
             </Stack>
           )}

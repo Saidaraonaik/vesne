@@ -73,7 +73,7 @@ export function MyTasksPage() {
                       <StatusBadge status={task.status} label={taskStatusLabel(task.status, 'executor')} />
                     </TableCell>
                     <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                      <Button component={RouterLink} to={`/executor/tasks/${task.id}`} variant="contained" size="small">Open task</Button>
+                      <Button component={RouterLink} to={`/executor/tasks/${task.id}`} variant="contained" size="small">{task.status === 'rejected' ? 'Resubmit' : 'Open task'}</Button>
                     </TableCell>
                   </TableRow>
                 )

@@ -84,7 +84,9 @@ export function SettingsPage() {
         </Table>
       </SectionCard>
       <SectionCard title="Workspace">
-        <Typography color="text.secondary" sx={{ mb: 1.5 }}>Clearing the workspace removes clients, projects, tasks, and proof stored in this browser.</Typography>
+        <Typography color="text.secondary" sx={{ mb: 1.5 }}>
+          Clearing the workspace removes clients, projects, tasks, and proof stored in this browser. Reloading the page restores the live Horizon demo.
+        </Typography>
         <Button color="error" variant="outlined" onClick={() => setConfirm(true)}>Clear workspace</Button>
       </SectionCard>
       <ConfirmDialog

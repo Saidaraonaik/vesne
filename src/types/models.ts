@@ -83,7 +83,7 @@ export interface Task {
   targetDate: string
   quantity: number
   requiredProofTypes: ProofType[]
-  referenceImage: string
+  referenceImages: string[]
   status: TaskStatus
   createdAt: string
 }
@@ -93,9 +93,11 @@ export interface ProofSubmission {
   taskId: string
   executorId: string
   imageDataUrl: string
+  imageDataUrls?: string[]
   lat: number
   lng: number
   locationLabel: string
+  placeName?: string
   gpsSource: GpsSource
   submittedAt: string
   status: ProofStatus

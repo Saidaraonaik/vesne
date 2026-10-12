@@ -78,11 +78,11 @@ export async function downloadWatermarked(src: string, lines: string[], filename
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Could not prepare the watermarked image.')
   context.drawImage(image, 0, 0)
-  const barHeight = Math.max(150, Math.round(image.height * 0.28))
+  const fontSize = Math.max(16, Math.round(image.width * 0.028))
+  const barHeight = Math.max(150, 36 + lines.length * (fontSize + 10))
   context.fillStyle = 'rgba(228, 87, 14, 0.92)'
   context.fillRect(0, image.height - barHeight, image.width, barHeight)
   context.fillStyle = '#ffffff'
-  const fontSize = Math.max(16, Math.round(image.width * 0.028))
   context.font = `700 ${fontSize}px "Trebuchet MS", Arial, sans-serif`
   lines.forEach((line, index) => {
     context.fillText(line, 28, image.height - barHeight + fontSize + 16 + index * (fontSize + 8))
