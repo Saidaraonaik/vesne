@@ -39,18 +39,39 @@ export function SubmissionHistoryPage() {
             const task = findTask(data, submission.taskId)
             const project = task ? findProject(data, task.projectId) : null
             return (
-              <Box key={submission.id} sx={{ ...panelSx, p: 2, display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '120px 1fr' } }}>
-                <Box component="img" src={submission.imageDataUrl} alt="" sx={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 1.5 }} />
-                <Stack spacing={0.5}>
-                  <Typography sx={{ fontWeight: 800 }}>{task?.taskCode} · {project?.name}</Typography>
-                  <Typography variant="body2">{formatDateTime(submission.submittedAt)}</Typography>
-                  <StatusBadge status={submission.status} label={proofStatusLabel(submission.status)} />
-                  {submission.verificationRemarks && <Typography variant="body2">Remarks: {submission.verificationRemarks}</Typography>}
-                  {submission.rejectionReason && <Typography variant="body2">Rejection reason: {submission.rejectionReason}</Typography>}
-                  {submission.status === 'rejected' && task?.status === 'rejected' && (
-                    <Button component={RouterLink} to={`/executor/tasks/${task.id}`} variant="contained" sx={{ alignSelf: 'flex-start', mt: 1 }}>Resubmit proof</Button>
+              <Box key={submission.id} sx={{ ...panelSx, p: 1.75, display: 'flex', gap: 1.75, alignItems: 'flex-start' }}>
+                <Box
+                  component="img"
+                  src={submission.imageDataUrl}
+                  alt=""
+                  sx={{ width: 88, height: 64, objectFit: 'cover', borderRadius: '8px', flexShrink: 0, bgcolor: '#F4F7FA', display: 'block' }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 800, color: '#1A2633', lineHeight: 1.3 }}>{task?.taskCode} · {project?.name}</Typography>
+                      <Typography sx={{ mt: 0.25, fontSize: 13, color: '#5E7082' }}>{formatDateTime(submission.submittedAt)}</Typography>
+                    </Box>
+                    <Box sx={{ flexShrink: 0 }}>
+                      <StatusBadge status={submission.status} label={proofStatusLabel(submission.status)} />
+                    </Box>
+                  </Stack>
+                  {submission.verificationRemarks && (
+                    <Typography sx={{ mt: 1, fontSize: 14, lineHeight: 1.45, color: '#1A2633' }}>
+                      Remarks: {submission.verificationRemarks}
+                    </Typography>
                   )}
-                </Stack>
+                  {submission.rejectionReason && (
+                    <Typography sx={{ mt: 1, fontSize: 14, lineHeight: 1.45, color: '#1A2633' }}>
+                      Rejection reason: {submission.rejectionReason}
+                    </Typography>
+                  )}
+                  {submission.status === 'rejected' && task?.status === 'rejected' && (
+                    <Button component={RouterLink} to={`/executor/tasks/${task.id}`} variant="contained" size="small" sx={{ mt: 1.25, alignSelf: 'flex-start', width: 'fit-content' }}>
+                      Resubmit proof
+                    </Button>
+                  )}
+                </Box>
               </Box>
             )
           })}
