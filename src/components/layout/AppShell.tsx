@@ -96,10 +96,10 @@ export function AppShell() {
     }
     return [
       { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
+      { label: 'Clients', to: '/admin/clients', icon: Building },
+      { label: 'Executors', to: '/admin/executors', icon: Users },
       { label: 'Projects', to: '/admin/projects', icon: FolderKanban },
       { label: 'Tasks & Work Locations', to: '/admin/tasks', icon: MapPinned },
-      { label: 'Executors', to: '/admin/executors', icon: Users },
-      { label: 'Clients', to: '/admin/clients', icon: Building },
       { label: 'Proof Verification', to: '/admin/verification', icon: ShieldCheck, badge: awaiting || undefined },
       { label: 'Reports', to: '/admin/reports', icon: ChartColumn },
       { label: 'Work Map', to: '/admin/map', icon: Map },
