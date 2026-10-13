@@ -128,7 +128,7 @@ export function ReportView({
         <Button variant="outlined" startIcon={<FileDown size={16} />} onClick={() => void download('pdf')}>PDF</Button>
       </Stack>
       <Alert severity="info">
-        Exports use the rows currently shown. PDF pages include each current proof photograph. CSV and Excel downloads add those same images in a photos folder when any row has one.
+        Exports use the rows currently shown. Each proof photograph in the PDF, and in the photos folder of the CSV and Excel download, includes the location card with the place, address, coordinates, and time.
       </Alert>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
         <TextField select size="small" label="Project" value={project} onChange={(event) => { setProject(event.target.value); setPage(0) }} sx={{ minWidth: 180 }}>

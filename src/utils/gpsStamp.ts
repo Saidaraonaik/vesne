@@ -126,8 +126,8 @@ export async function renderGpsStamp(src: string, stamp: GpsStamp) {
   if (!context) throw new Error('Could not prepare the shared proof image.')
   context.drawImage(image, 0, 0)
 
-  const margin = Math.round(image.width * 0.03)
-  const cardH = Math.max(118, Math.round(image.height * 0.28))
+  const margin = Math.round(Math.min(image.width, image.height) * 0.03)
+  const cardH = Math.round(Math.min(image.height * 0.36, Math.max(148, image.width * 0.24)))
   const cardW = Math.min(image.width - margin * 2, Math.round(image.width * 0.92))
   const cardX = margin
   const cardY = image.height - cardH - margin
@@ -135,8 +135,8 @@ export async function renderGpsStamp(src: string, stamp: GpsStamp) {
   const mapSize = cardH - pad * 2
 
   context.save()
-  roundRect(context, cardX, cardY, cardW, cardH, 10)
-  context.fillStyle = 'rgba(28, 28, 28, 0.94)'
+  roundRect(context, cardX, cardY, cardW, cardH, 12)
+  context.fillStyle = '#1A1A1A'
   context.fill()
   context.restore()
 
@@ -167,6 +167,7 @@ export async function renderGpsStamp(src: string, stamp: GpsStamp) {
   ]
   details.forEach((detail) => {
     wrap(context, detail, textW, 2).forEach((line) => {
+      if (cursor + bodySize > cardY + cardH - pad) return
       context.fillText(line, textX, cursor)
       cursor += bodySize + 3
     })

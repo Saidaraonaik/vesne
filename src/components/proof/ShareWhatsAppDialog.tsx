@@ -78,8 +78,8 @@ export function ShareWhatsAppDialog({
     try {
       const file = await prepareFile()
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text: message, title: file.name })
-        onNotify('Proof image handed to the share sheet.', 'success')
+        await navigator.share({ files: [file] })
+        onNotify('The proof photo was shared once. Copy the message if the chat also needs the written update.', 'success')
         onClose()
         return
       }
@@ -113,7 +113,7 @@ export function ShareWhatsAppDialog({
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2" color="text.secondary">
-            The shared photo includes a location card with the place name, address, coordinates, and time.
+            The photo is shared once, with the location card already on the image. The written update stays in the message below so WhatsApp does not attach the photo a second time.
           </Typography>
           {share?.stamp && !stamped && (
             <Typography variant="body2" color="text.secondary">Adding the location card…</Typography>

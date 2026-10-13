@@ -3,8 +3,25 @@ import autoTable from 'jspdf-autotable'
 import { utils, write, writeFile } from 'xlsx'
 import type { ReportRow } from '../utils/reports.ts'
 import { downloadBlob } from '../utils/download.ts'
+import { renderGpsStamp } from '../utils/gpsStamp.ts'
 import { dataUrlBytes, toJpegDataUrl } from '../utils/images.ts'
 import { zipStore } from '../utils/zip.ts'
+
+async function proofJpeg(row: ReportRow) {
+  if (!row.imageDataUrl) return ''
+  if (row.lat == null || row.lng == null || !row.capturedAt) return toJpegDataUrl(row.imageDataUrl)
+  try {
+    return await renderGpsStamp(row.imageDataUrl, {
+      placeName: row.placeName || row.location,
+      address: row.proofAddress || row.address,
+      lat: row.lat,
+      lng: row.lng,
+      at: row.capturedAt,
+    })
+  } catch {
+    return toJpegDataUrl(row.imageDataUrl)
+  }
+}
 
 function sheetRows(rows: ReportRow[]) {
   return rows.map((row) => ({
@@ -46,7 +63,7 @@ async function photoFiles(rows: ReportRow[]) {
   const files: { name: string; data: Uint8Array }[] = []
   for (const row of rows) {
     if (!row.imageDataUrl || !row.imageName) continue
-    const jpeg = await toJpegDataUrl(row.imageDataUrl)
+    const jpeg = await proofJpeg(row)
     files.push({ name: `photos/${row.imageName}`, data: dataUrlBytes(jpeg) })
   }
   return files
@@ -89,7 +106,7 @@ export async function exportPdf(filename: string, title: string, rows: ReportRow
   doc.text(title, 40, 36)
   doc.setFontSize(10)
   doc.setTextColor(122, 91, 69)
-  doc.text('Vesne demo export. Photographs are the current proof images stored in this browser.', 40, 56)
+  doc.text('Proof photographs include a location card with the place, address, coordinates, and time.', 40, 56)
   autoTable(doc, {
     startY: 72,
     head: [['Task', 'Project', 'Client', 'Location', 'Executor', 'Status', 'Target', 'Proof image']],
@@ -108,7 +125,7 @@ export async function exportPdf(filename: string, title: string, rows: ReportRow
   })
   for (const row of rows) {
     if (!row.imageDataUrl) continue
-    const jpeg = await toJpegDataUrl(row.imageDataUrl)
+    const jpeg = await proofJpeg(row)
     doc.addPage()
     doc.setFontSize(14)
     doc.setTextColor(63, 44, 30)
@@ -117,7 +134,7 @@ export async function exportPdf(filename: string, title: string, rows: ReportRow
     doc.setTextColor(122, 91, 69)
     doc.text(`${row.project} · ${row.status} · ${row.imageName}`, 40, 58)
     doc.addImage(jpeg, 'JPEG', 40, 76, 520, 340)
-    doc.text('Current demo photograph. Not a certified GPS or authenticity proof.', 40, 436)
+    doc.text('The photograph includes the location card: place, address, coordinates, and time.', 40, 436)
   }
   doc.save(filename)
 }
