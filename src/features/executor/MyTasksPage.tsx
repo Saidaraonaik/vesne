@@ -33,8 +33,8 @@ export function MyTasksPage() {
     <Stack spacing={2}>
       <PageHeader
         title="My tasks"
-        subtitle="Only work assigned to this executor is listed."
-        crumbs={[{ label: 'Executor', to: '/executor' }, { label: 'My tasks' }]}
+        subtitle="Only work assigned to this user is listed."
+        crumbs={[{ label: 'User', to: '/executor' }, { label: 'My tasks' }]}
       />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
         <TextField size="small" label="Search tasks" value={query} onChange={(event) => setQuery(event.target.value)} fullWidth />

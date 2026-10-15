@@ -23,7 +23,7 @@ export function AdminMapPage() {
       color: TASK_COLORS[task.status],
       details: [
         { label: 'Project', value: project?.name ?? '—' },
-        { label: 'Executor', value: executor?.name ?? '—' },
+        { label: 'User', value: executor?.name ?? '—' },
         { label: 'Status', value: taskStatusLabel(task.status) },
         { label: 'Submission', value: latest ? formatDateTime(latest.submittedAt) : 'Not submitted' },
         { label: 'Coordinates', value: formatCoords(task.lat, task.lng) },
@@ -35,7 +35,7 @@ export function AdminMapPage() {
     <Stack spacing={2}>
       <PageHeader
         title="Work map"
-        subtitle="Work locations from your tasks. Select a marker for the task, executor, and status."
+        subtitle="Work locations from your tasks. Select a marker for the task, user, and status."
         crumbs={[{ label: 'Admin', to: '/admin' }, { label: 'Work map' }]}
       />
       <MapExplorer points={points} />

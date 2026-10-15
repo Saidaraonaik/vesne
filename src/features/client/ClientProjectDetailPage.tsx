@@ -45,7 +45,7 @@ export function ClientProjectDetailPage() {
         project: `${project.name} / ${project.campaign}`,
         location: task.locationName,
         date: formatDate(approved.reviewedAt ?? approved.submittedAt),
-        executor: executor?.name ?? 'Field executor',
+        executor: executor?.name ?? 'Field user',
         coordinates: `${formatCoords(approved.lat, approved.lng)}`,
         reference: `VESNE-${task.taskCode}`,
         filename,

@@ -80,7 +80,7 @@ export function VerificationPage() {
     <Stack spacing={2}>
       <PageHeader
         title="Proof verification"
-        subtitle="Approve work to publish it in the client portal, or reject it with a reason the executor can see."
+        subtitle="Approve work to publish it in the client portal, or reject it with a reason the user can see."
         crumbs={[{ label: 'Admin', to: '/admin' }, { label: 'Proof verification' }]}
       />
       <Tabs value={currentTab} onChange={(_, value: ProofStatus) => { setTab(value); setPickedId(null); if (submissionId) navigate('/admin/verification') }} variant="scrollable">
@@ -90,7 +90,7 @@ export function VerificationPage() {
       </Tabs>
       <TextField size="small" label="Search submissions" value={query} onChange={(event) => setQuery(event.target.value)} />
       {rows.length === 0 ? (
-        <EmptyState title="Nothing in this queue" body="Submissions appear here after an executor uploads proof." />
+        <EmptyState title="Nothing in this queue" body="Submissions appear here after a user uploads proof." />
       ) : (
         <TableContainer sx={panelSx}>
           <Table sx={{ '& td, & th': { verticalAlign: 'middle' } }}>
@@ -220,7 +220,7 @@ function ReviewDialog({
             >
               <Fact label="Project" value={project?.name} />
               <Fact label="Client" value={client?.name} />
-              <Fact label="Executor" value={executor ? `${executor.name} · ${executor.executorCode}` : ''} />
+              <Fact label="User" value={executor ? `${executor.name} · ${executor.executorCode}` : ''} />
               <Fact label="Location" value={task?.locationName} />
               <Fact label="Address" value={submission.locationLabel} />
               <Fact label="Submitted" value={formatDateTime(submission.submittedAt)} />
@@ -256,7 +256,7 @@ function ReviewDialog({
                 multiline
                 minRows={3}
                 error={Boolean(reasonError)}
-                helperText={reasonError || 'The executor sees this text.'}
+                helperText={reasonError || 'The user sees this text.'}
               />
             )}
             <Button
@@ -275,7 +275,7 @@ function ReviewDialog({
                   project: project ? `${project.name} / ${project.campaign}` : 'Project',
                   location: task?.locationName ?? 'Work location',
                   date: formatDateTime(submission.submittedAt),
-                  executor: executor?.name ?? 'Field executor',
+                  executor: executor?.name ?? 'Field user',
                   coordinates: `${formatCoords(submission.lat, submission.lng)}`,
                   reference: `VESNE-${task?.taskCode ?? submission.id}`,
                   filename,

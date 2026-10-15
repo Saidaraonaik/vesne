@@ -25,7 +25,7 @@ export function SubmissionHistoryPage() {
       <PageHeader
         title="Submission history"
         subtitle="Proof you submitted, including admin remarks and rejection reasons."
-        crumbs={[{ label: 'Executor', to: '/executor' }, { label: 'Submission history' }]}
+        crumbs={[{ label: 'User', to: '/executor' }, { label: 'Submission history' }]}
       />
       <TextField select size="small" label="Status" value={status} onChange={(event) => setStatus(event.target.value as 'all' | ProofStatus)} sx={{ maxWidth: 280 }}>
         <MenuItem value="all">All</MenuItem>

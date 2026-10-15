@@ -74,7 +74,7 @@ export function GalleryPage() {
         project: project ? `${project.name} / ${project.campaign}` : 'Project',
         location: task?.locationName ?? 'Work location',
         date: formatDate(submission.reviewedAt ?? submission.submittedAt),
-        executor: executor?.name ?? 'Field executor',
+        executor: executor?.name ?? 'Field user',
         coordinates: `${formatCoords(submission.lat, submission.lng)}`,
         reference: `VESNE-${task?.taskCode ?? submission.id}`,
         filename,
@@ -170,7 +170,7 @@ export function GalleryPage() {
               <Typography>Completed {formatDateTime(selected.reviewedAt ?? selected.submittedAt)}</Typography>
               <Typography>Coordinates: {formatCoords(selected.lat, selected.lng)}</Typography>
               <Typography variant="body2" color="text.secondary">{gpsSourceLabel(selected.gpsSource)} Address: {selected.locationLabel}</Typography>
-              <Typography>Executor: {findExecutor(data, selected.executorId)?.name}</Typography>
+              <Typography>User: {findExecutor(data, selected.executorId)?.name}</Typography>
             </Stack>
           )}
         </DialogContent>

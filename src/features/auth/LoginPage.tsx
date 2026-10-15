@@ -9,7 +9,7 @@ import type { Role } from '../../types/models.ts'
 
 const ROLE_COPY: Record<Role, { label: string; detail: string; icon: typeof ShieldCheck }> = {
   admin: { label: 'Continue as Admin', detail: 'Projects, verification, and reports', icon: ShieldCheck },
-  executor: { label: 'Continue as Executor', detail: 'Assigned tasks and proof submission', icon: UserRound },
+  executor: { label: 'Continue as User', detail: 'Assigned tasks and proof submission', icon: UserRound },
   client: { label: 'Continue as Client', detail: 'Approved work, map, and reports', icon: Building },
 }
 

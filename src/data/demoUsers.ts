@@ -22,7 +22,7 @@ export const DEMO_USERS: DemoUser[] = [
     email: 'executor@vesne.demo',
     role: 'executor',
     name: 'Ravi Kumar',
-    title: 'Field executor',
+    title: 'Field user',
     executorId: 'ex_ravi',
   },
   {

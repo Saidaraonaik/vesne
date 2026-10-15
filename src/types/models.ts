@@ -76,6 +76,8 @@ export interface Task {
   projectId: string
   locationName: string
   address: string
+  city?: string
+  state?: string
   lat: number
   lng: number
   instructions: string
@@ -126,7 +128,7 @@ export interface AppData {
   activities: Activity[]
 }
 
-export const PROOF_TYPES: ProofType[] = ['photo', 'video', 'document']
+export const PROOF_TYPES: ProofType[] = ['photo', 'document']
 
 export const PROJECT_STATUSES: ProjectStatus[] = [
   'draft',

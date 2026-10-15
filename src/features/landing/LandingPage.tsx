@@ -271,7 +271,7 @@ export function LandingPage() {
           <Typography variant="h4" sx={{ maxWidth: 680, mt: 1, color: '#1A2633' }}>Proof of every poster, hoarding, and wall — from assignment to client sign-off.</Typography>
           <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }, my: 3, alignItems: 'stretch' }}>
             {[
-              ['Assign', 'Create the campaign, sites, and executor instructions.'],
+              ['Assign', 'Create the campaign, sites, and user instructions.'],
               ['Capture', 'Upload the photograph and record the device location.'],
               ['Approve', 'Review the proof, then share only the approved work with the client.'],
             ].map(([title, body]) => (

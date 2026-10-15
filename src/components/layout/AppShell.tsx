@@ -97,7 +97,7 @@ export function AppShell() {
     return [
       { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
       { label: 'Clients', to: '/admin/clients', icon: Building },
-      { label: 'Executors', to: '/admin/executors', icon: Users },
+      { label: 'Users', to: '/admin/executors', icon: Users },
       { label: 'Projects', to: '/admin/projects', icon: FolderKanban },
       { label: 'Tasks & Work Locations', to: '/admin/tasks', icon: MapPinned },
       { label: 'Proof Verification', to: '/admin/verification', icon: ShieldCheck, badge: awaiting || undefined },
@@ -201,7 +201,7 @@ export function AppShell() {
               sx={{ minWidth: { xs: 150, sm: 200 }, bgcolor: 'background.paper' }}
             >
               <MenuItem value="admin">Admin</MenuItem>
-              <MenuItem value="executor">Executor</MenuItem>
+              <MenuItem value="executor">User</MenuItem>
               <MenuItem value="client">Client</MenuItem>
             </TextField>
             <Tooltip title="Recent activity">

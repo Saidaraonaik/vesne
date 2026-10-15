@@ -28,7 +28,7 @@ export function ClientMapPage() {
       details: [
         { label: 'Project', value: project?.name ?? '—' },
         { label: 'Approved', value: formatDate(submission.reviewedAt ?? submission.submittedAt) },
-        { label: 'Executor', value: executor?.name ?? '—' },
+        { label: 'User', value: executor?.name ?? '—' },
         { label: 'Proof reference', value: `VESNE-${task.taskCode}` },
         { label: 'Coordinates', value: `${formatCoords(submission.lat, submission.lng)}` },
       ],

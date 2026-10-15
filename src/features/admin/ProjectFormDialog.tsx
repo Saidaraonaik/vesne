@@ -50,7 +50,7 @@ function valuesFrom(project: Project | null): FormValues {
     quantity: project?.quantity ?? 1,
     workType: project?.workType ?? '',
     executorInstructions: project?.executorInstructions ?? '',
-    requiredProofTypes: project?.requiredProofTypes ?? ['photo'],
+    requiredProofTypes: (project?.requiredProofTypes ?? ['photo']).filter((type) => type !== 'video'),
     targetDate: project?.targetDate ?? today,
     budget: project?.budget ?? 0,
     internalNotes: project?.internalNotes ?? '',
@@ -96,6 +96,7 @@ export function ProjectFormDialog({
           const saved = saveProject({
             id: project?.id,
             ...values,
+            requiredProofTypes: values.requiredProofTypes.filter((type) => type !== 'video'),
             referenceImages: images,
           })
           if (saved) onClose()
@@ -186,7 +187,7 @@ export function ProjectFormDialog({
             <TextField size="small" type="number" label="Budget (INR)" sx={fieldSx} {...fieldBind(register('budget', { valueAsNumber: true, required: true, min: { value: 0, message: 'Cannot be negative' } }))} error={Boolean(errors.budget)} helperText={errors.budget?.message} />
             <TextField size="small" label="Type of work" sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('workType', { required: 'Type of work is required' }))} error={Boolean(errors.workType)} helperText={errors.workType?.message} />
             <TextField size="small" label="Work locations" sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('workLocations', { required: 'Describe the work locations' }))} error={Boolean(errors.workLocations)} helperText={errors.workLocations?.message} />
-            <TextField size="small" label="Executor instructions" multiline minRows={2} sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('executorInstructions'))} helperText="Optional." />
+            <TextField size="small" label="User instructions" multiline minRows={2} sx={{ ...fieldSx, gridColumn: '1 / -1' }} {...fieldBind(register('executorInstructions'))} helperText="Optional." />
             <Controller
               name="requiredProofTypes"
               control={control}

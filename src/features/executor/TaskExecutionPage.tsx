@@ -51,7 +51,6 @@ export function TaskExecutionPage() {
   const [lookingUp, setLookingUp] = useState(false)
   const lookedUp = useRef('')
   const [documentName, setDocumentName] = useState('')
-  const [videoName, setVideoName] = useState('')
   const [formError, setFormError] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
@@ -86,7 +85,7 @@ export function TaskExecutionPage() {
   }, [lookupLat, lookupLng])
 
   if (!task || !session?.executorId) {
-    return <EmptyState title="Task unavailable" body="This task is not assigned to the signed-in executor." action={<Button component={RouterLink} to="/executor/tasks">Back to my tasks</Button>} />
+    return <EmptyState title="Task unavailable" body="This task is not assigned to the signed-in user." action={<Button component={RouterLink} to="/executor/tasks">Back to my tasks</Button>} />
   }
 
   const project = findProject(data, task.projectId)
@@ -152,10 +151,6 @@ export function TaskExecutionPage() {
       setFormError('Attach the required document before submitting.')
       return
     }
-    if (task.requiredProofTypes.includes('video') && !videoName) {
-      setFormError('Select the required video before submitting.')
-      return
-    }
     if (lat == null || lng == null || !gpsSource) {
       setFormError('Capture GPS before submitting.')
       return
@@ -173,7 +168,6 @@ export function TaskExecutionPage() {
         placeName: placeName || undefined,
         gpsSource,
         documentName: documentName || undefined,
-        videoName: videoName || undefined,
       })
       setBusy(false)
       if (ok) setDone(true)
@@ -185,7 +179,7 @@ export function TaskExecutionPage() {
       <PageHeader
         title={task.locationName}
         subtitle={`${task.taskCode} · ${project?.name ?? ''}`}
-        crumbs={[{ label: 'Executor', to: '/executor' }, { label: 'My tasks', to: '/executor/tasks' }, { label: task.taskCode }]}
+        crumbs={[{ label: 'User', to: '/executor' }, { label: 'My tasks', to: '/executor/tasks' }, { label: task.taskCode }]}
       />
       <Stepper activeStep={step} alternativeLabel sx={{ display: { xs: 'none', sm: 'flex' } }}>
         {['Assigned', 'Capture proof', 'Submit', 'Verification', 'Completed'].map((label) => (
@@ -222,8 +216,10 @@ export function TaskExecutionPage() {
             <Fact label="Location name" value={shownPlace} />
             <Fact label="Address" value={shownAddress} />
             <Fact label="Target" value={formatDate(task.targetDate)} />
-            <Fact label="Required proof" value={task.requiredProofTypes.join(', ')} />
-            <Fact label="Executor" value={executor ? `${executor.name} · ${executor.executorCode}` : ''} />
+            <Fact label="City" value={task.city} />
+            <Fact label="State" value={task.state} />
+            <Fact label="Required proof" value={task.requiredProofTypes.filter((type) => type !== 'video').join(', ')} />
+            <Fact label="User" value={executor ? `${executor.name} · ${executor.executorCode}` : ''} />
           </Box>
           <Box sx={{ mt: 2 }}>
             <Typography sx={{ mb: 0.75, fontSize: 12, fontWeight: 700, color: '#5E7082' }}>Reference images</Typography>
@@ -300,14 +296,8 @@ export function TaskExecutionPage() {
                   <input hidden type="file" accept=".pdf,.doc,.docx,image/*" onChange={(event) => setDocumentName(event.target.files?.[0]?.name ?? '')} />
                 </Button>
               )}
-              {task.requiredProofTypes.includes('video') && (
-                <Button component="label" variant="outlined">
-                  {videoName ? `Video: ${videoName}` : 'Select video'}
-                  <input hidden type="file" accept="video/*" onChange={(event) => setVideoName(event.target.files?.[0]?.name ?? '')} />
-                </Button>
-              )}
               <Typography variant="caption" color="text.secondary">
-                Video and document files are recorded by name only. They are not uploaded to a server.
+                Document files are recorded by name only. They are not uploaded to a server.
               </Typography>
               <Button variant="outlined" startIcon={<LocateFixed size={16} />} onClick={captureGps} sx={{ alignSelf: 'flex-start' }}>Capture GPS</Button>
               {gpsError && <Alert severity="warning">{gpsError}</Alert>}

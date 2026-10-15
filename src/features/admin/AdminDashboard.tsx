@@ -71,9 +71,9 @@ export function AdminDashboard() {
             </Stack>
           )}
         </SectionCard>
-        <SectionCard title="Field team">
+        <SectionCard title="Users">
           {data.executors.length === 0 ? (
-            <Typography color="text.secondary">Executors you add will appear here.</Typography>
+            <Typography color="text.secondary">Users you add will appear here.</Typography>
           ) : (
             <Stack spacing={1.25}>
               {data.executors.map((executor) => {

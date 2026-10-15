@@ -67,8 +67,10 @@ export function TaskDetailPage() {
             <Fact label="Campaign" value={project?.campaign} />
             <Fact label="Client" value={client?.name} />
             <Fact label="Address" value={task.address} />
+            <Fact label="City" value={task.city} />
+            <Fact label="State" value={task.state} />
             <Fact label="Coordinates" value={formatCoords(task.lat, task.lng)} />
-            <Fact label="Executor" value={executor ? `${executor.name} · ${executor.executorCode}` : ''} />
+            <Fact label="User" value={executor ? `${executor.name} · ${executor.executorCode}` : ''} />
             <Fact label="Target" value={formatDate(task.targetDate)} />
             <Fact label="Quantity" value={task.quantity} />
             <Fact label="Instructions" value={task.instructions} />
@@ -76,7 +78,7 @@ export function TaskDetailPage() {
               label="Proof"
               value={
                 <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                  {task.requiredProofTypes.map((type) => <Chip key={type} size="small" label={type} />)}
+                  {task.requiredProofTypes.filter((type) => type !== 'video').map((type) => <Chip key={type} size="small" label={type} />)}
                 </Stack>
               }
             />
@@ -154,7 +156,7 @@ export function TaskDetailPage() {
                       project: project ? `${project.name} / ${project.campaign}` : 'Project',
                       location: task.locationName,
                       date: formatDateTime(latest.submittedAt),
-                      executor: executor?.name ?? 'Field executor',
+                      executor: executor?.name ?? 'Field user',
                       coordinates: `${formatCoords(latest.lat, latest.lng)}`,
                       reference: `VESNE-${task.taskCode}`,
                       filename,

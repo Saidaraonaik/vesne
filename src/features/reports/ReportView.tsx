@@ -161,7 +161,7 @@ export function ReportView({
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' } }}>
         <ChartCard title="Project-wise progress" subtitle="Completed locations"><MiniBar data={byProject} color="#E4570E" /></ChartCard>
         {showClientFilter && <ChartCard title="Client-wise progress" subtitle="Completed locations"><MiniBar data={byClient} color="#0F6E6B" /></ChartCard>}
-        <ChartCard title="Executor-wise completed work"><MiniBar data={byExecutor} color="#6D28D9" /></ChartCard>
+        <ChartCard title="User-wise completed work"><MiniBar data={byExecutor} color="#6D28D9" /></ChartCard>
         <ChartCard title="Date-wise approvals" subtitle="Approved proof by review date"><MiniBar data={dateChart.length ? dateChart : [{ label: 'None', value: 0 }]} color="#d97706" /></ChartCard>
       </Box>
       {filtered.length === 0 ? <EmptyState title="No rows in this filter" body="Widen the date range or clear a status filter." /> : (
@@ -172,7 +172,7 @@ export function ReportView({
                 <TableCell>Task</TableCell>
                 <TableCell>Project</TableCell>
                 <TableCell>Location</TableCell>
-                <TableCell>Executor</TableCell>
+                <TableCell>User</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Target</TableCell>
                 <TableCell>Proof image</TableCell>

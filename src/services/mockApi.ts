@@ -61,7 +61,8 @@ export interface ProjectInput {
 export function saveProject(data: AppData, input: ProjectInput, actor: string): MutationResult {
   if (!input.name.trim() || !input.clientId) return fail('Project name and client are required.')
   if (!input.campaign.trim()) return fail('Campaign name is required.')
-  if (input.requiredProofTypes.length === 0) return fail('Select at least one proof type.')
+  const proofTypes = input.requiredProofTypes.filter((type) => type !== 'video')
+  if (proofTypes.length === 0) return fail('Select at least one proof type.')
   if (input.endDate < input.startDate) return fail('End date must be on or after the start date.')
   const now = new Date().toISOString()
   if (input.id) {
@@ -78,7 +79,7 @@ export function saveProject(data: AppData, input: ProjectInput, actor: string): 
       quantity: input.quantity,
       workType: input.workType.trim(),
       executorInstructions: input.executorInstructions.trim(),
-      requiredProofTypes: input.requiredProofTypes,
+      requiredProofTypes: proofTypes,
       targetDate: input.targetDate,
       budget: input.budget,
       internalNotes: input.internalNotes.trim(),
@@ -102,7 +103,7 @@ export function saveProject(data: AppData, input: ProjectInput, actor: string): 
     quantity: input.quantity,
     workType: input.workType.trim(),
     executorInstructions: input.executorInstructions.trim(),
-    requiredProofTypes: input.requiredProofTypes,
+    requiredProofTypes: proofTypes,
     targetDate: input.targetDate,
     referenceImages: input.referenceImages ?? [],
     budget: input.budget,
@@ -122,6 +123,8 @@ export interface TaskInput {
   projectId: string
   locationName: string
   address: string
+  city?: string
+  state?: string
   lat: number
   lng: number
   instructions: string
@@ -134,14 +137,15 @@ export interface TaskInput {
 }
 
 export function saveTask(data: AppData, input: TaskInput, actor: string): MutationResult {
-  if (!input.projectId || !input.locationName.trim() || !input.address.trim()) {
-    return fail('Project, location, and address are required.')
+  const proofTypes = input.requiredProofTypes.filter((type) => type !== 'video')
+  if (!input.projectId || !input.address.trim() || !input.city?.trim() || !input.state?.trim()) {
+    return fail('Project, address, city, and state are required.')
   }
-  if (!input.executorId) return fail('Assign an executor before saving the task.')
+  if (!input.executorId) return fail('Assign a user before saving the task.')
   if (!data.executors.some((executor) => executor.id === input.executorId)) {
-    return fail('Choose a valid executor.')
+    return fail('Choose a valid user.')
   }
-  if (input.requiredProofTypes.length === 0) return fail('Select at least one proof type.')
+  if (proofTypes.length === 0) return fail('Select at least one proof type.')
   if (!Number.isFinite(input.lat) || !Number.isFinite(input.lng)) {
     return fail('Enter latitude and longitude.')
   }
@@ -155,15 +159,17 @@ export function saveTask(data: AppData, input: TaskInput, actor: string): Mutati
     const next: Task = {
       ...existing,
       projectId: input.projectId,
-      locationName: input.locationName.trim(),
+      locationName: (input.locationName || input.address).trim(),
       address: input.address.trim(),
+      city: input.city?.trim() ?? '',
+      state: input.state?.trim() ?? '',
       lat: input.lat,
       lng: input.lng,
       instructions: input.instructions.trim(),
       executorId: locked ? existing.executorId : input.executorId,
       targetDate: input.targetDate,
       quantity: input.quantity,
-      requiredProofTypes: input.requiredProofTypes,
+      requiredProofTypes: proofTypes,
       referenceImages: input.referenceImages ?? existing.referenceImages,
       status:
         existing.status === 'assigned' || existing.status === 'in_progress'
@@ -189,15 +195,17 @@ export function saveTask(data: AppData, input: TaskInput, actor: string): Mutati
       2600,
     ),
     projectId: input.projectId,
-    locationName: input.locationName.trim(),
+    locationName: (input.locationName || input.address).trim(),
     address: input.address.trim(),
+    city: input.city?.trim() ?? '',
+    state: input.state?.trim() ?? '',
     lat: input.lat,
     lng: input.lng,
     instructions: input.instructions.trim(),
     executorId: input.executorId,
     targetDate: input.targetDate,
     quantity: input.quantity,
-    requiredProofTypes: input.requiredProofTypes,
+    requiredProofTypes: proofTypes,
     referenceImages: input.referenceImages ?? [],
     status: 'assigned',
     createdAt: now,
@@ -227,17 +235,17 @@ export function saveExecutor(data: AppData, input: ExecutorInput, actor: string)
   const name = input.name.trim()
   const email = input.email.trim()
   const password = input.password.trim()
-  if (!name || !email) return fail('Executor name and email are required.')
+  if (!name || !email) return fail('User name and email are required.')
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Enter a valid email.')
   const duplicate = data.executors.find(
     (executor) => executor.id !== input.id && executor.email.trim().toLowerCase() === email.toLowerCase(),
   )
-  if (duplicate) return fail('An executor with this email already exists.')
+  if (duplicate) return fail('A user with this email already exists.')
   if (input.id) {
     const existing = data.executors.find((executor) => executor.id === input.id)
-    if (!existing) return fail('Executor not found.')
+    if (!existing) return fail('User not found.')
     if (password && password.length < 4) return fail('Password must be at least 4 characters.')
-    if (!password && !existing.password) return fail('Set a password so this executor can sign in.')
+    if (!password && !existing.password) return fail('Set a password so this user can sign in.')
     const next = {
       ...existing,
       name,
@@ -249,7 +257,7 @@ export function saveExecutor(data: AppData, input: ExecutorInput, actor: string)
     return ok({
       ...data,
       executors: data.executors.map((executor) => (executor.id === next.id ? next : executor)),
-      activities: addActivity(data.activities, actor, `Updated executor ${next.name}.`, 'account'),
+      activities: addActivity(data.activities, actor, `Updated user ${next.name}.`, 'account'),
     })
   }
   if (password.length < 4) return fail('Password must be at least 4 characters.')
@@ -274,7 +282,7 @@ export function saveExecutor(data: AppData, input: ExecutorInput, actor: string)
     activities: addActivity(
       data.activities,
       actor,
-      `Added executor ${executor.name} (${executor.executorCode}).`,
+      `Added user ${executor.name} (${executor.executorCode}).`,
       'account',
     ),
   })
@@ -364,7 +372,7 @@ export interface SubmitProofInput {
 export function submitProof(data: AppData, input: SubmitProofInput, actor: string): MutationResult {
   const task = data.tasks.find((item) => item.id === input.taskId)
   if (!task) return fail('Task not found.')
-  if (task.executorId !== input.executorId) return fail('This task is not assigned to the signed-in executor.')
+  if (task.executorId !== input.executorId) return fail('This task is not assigned to the signed-in user.')
   if (task.status === 'completed') return fail('This task is already completed.')
   if (task.status === 'awaiting_verification') {
     return fail('Proof for this task is already awaiting verification.')
@@ -374,9 +382,6 @@ export function submitProof(data: AppData, input: SubmitProofInput, actor: strin
   }
   if (task.requiredProofTypes.includes('document') && !input.documentName) {
     return fail('Attach the required document before submitting.')
-  }
-  if (task.requiredProofTypes.includes('video') && !input.videoName) {
-    return fail('Select the required video before submitting.')
   }
   if (!Number.isFinite(input.lat) || !Number.isFinite(input.lng)) {
     return fail('Capture GPS before submitting.')

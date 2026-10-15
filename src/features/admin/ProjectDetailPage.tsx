@@ -110,7 +110,7 @@ export function ProjectDetailPage() {
           <DetailField label="Budget (INR)" value={formatInr(project.budget)} />
           <DetailField wide label="Type of work" value={project.workType} />
           <DetailField wide label="Work locations" value={project.workLocations} />
-          <DetailField wide label="Executor instructions" value={project.executorInstructions || '—'} />
+          <DetailField wide label="User instructions" value={project.executorInstructions || '—'} />
           <DetailField
             wide
             label="Required proof"
@@ -148,7 +148,7 @@ export function ProjectDetailPage() {
                 <TableRow>
                   <TableCell>Task</TableCell>
                   <TableCell>Location</TableCell>
-                  <TableCell>Executor</TableCell>
+                  <TableCell>User</TableCell>
                   <TableCell>Target</TableCell>
                   <TableCell>Status</TableCell>
                 </TableRow>

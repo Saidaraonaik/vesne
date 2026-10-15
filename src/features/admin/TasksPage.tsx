@@ -54,7 +54,7 @@ export function TasksPage() {
     <Stack spacing={2}>
       <PageHeader
         title="Tasks & work locations"
-        subtitle="Assign sites to executors. Proof review changes status after submission."
+        subtitle="Assign sites to users. Proof review changes status after submission."
         crumbs={[{ label: 'Admin', to: '/admin' }, { label: 'Tasks' }]}
         actions={<Button variant="contained" startIcon={<Plus size={16} />} onClick={() => setManual((current) => ({ open: true, task: null, key: current.key + 1 }))}>Assign task</Button>}
       />
@@ -64,8 +64,8 @@ export function TasksPage() {
           <MenuItem value="all">All projects</MenuItem>
           {data.projects.map((project) => <MenuItem key={project.id} value={project.id}>{project.campaign}</MenuItem>)}
         </TextField>
-        <TextField select size="small" label="Executor" value={executorId} onChange={(event) => setExecutorId(event.target.value)} sx={{ minWidth: 180 }}>
-          <MenuItem value="all">All executors</MenuItem>
+        <TextField select size="small" label="User" value={executorId} onChange={(event) => setExecutorId(event.target.value)} sx={{ minWidth: 180 }}>
+          <MenuItem value="all">All users</MenuItem>
           {data.executors.map((executor) => <MenuItem key={executor.id} value={executor.id}>{executor.name}</MenuItem>)}
         </TextField>
         <TextField select size="small" label="Status" value={status} onChange={(event) => setStatus(event.target.value)} sx={{ minWidth: 200 }}>
@@ -84,7 +84,7 @@ export function TasksPage() {
                 <TableCell>Project</TableCell>
                 <TableCell>Client</TableCell>
                 <TableCell>Location</TableCell>
-                <TableCell>Executor</TableCell>
+                <TableCell>User</TableCell>
                 <TableCell>Target</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>

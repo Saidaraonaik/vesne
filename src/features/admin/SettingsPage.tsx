@@ -57,7 +57,7 @@ export function SettingsPage() {
             <TableRow>
               <TableCell>Area</TableCell>
               <TableCell>Admin</TableCell>
-              <TableCell>Executor</TableCell>
+              <TableCell>User</TableCell>
               <TableCell>Client</TableCell>
             </TableRow>
           </TableHead>

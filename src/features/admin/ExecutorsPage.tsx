@@ -35,19 +35,19 @@ export function ExecutorsPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="Executors"
-        subtitle="Each executor signs in with the email and password saved here."
-        crumbs={[{ label: 'Admin', to: '/admin' }, { label: 'Executors' }]}
-        actions={<Button variant="contained" startIcon={<Plus size={16} />} onClick={() => { setEditing(null); setFormKey((key) => key + 1); setOpen(true) }}>Add executor</Button>}
+        title="Users"
+        subtitle="Each user signs in with the email and password saved here."
+        crumbs={[{ label: 'Admin', to: '/admin' }, { label: 'Users' }]}
+        actions={<Button variant="contained" startIcon={<Plus size={16} />} onClick={() => { setEditing(null); setFormKey((key) => key + 1); setOpen(true) }}>Add user</Button>}
       />
       <Alert severity="info">The password is used on the sign-in screen. It stays in this browser until a backend is connected.</Alert>
-      <TextField size="small" label="Search executors" value={query} onChange={(event) => setQuery(event.target.value)} fullWidth />
-      {rows.length === 0 ? <EmptyState title="No executors match" body="Try another search or add an executor." /> : (
+      <TextField size="small" label="Search users" value={query} onChange={(event) => setQuery(event.target.value)} fullWidth />
+      {rows.length === 0 ? <EmptyState title="No users match" body="Try another search or add a user." /> : (
         <TableContainer sx={panelSx}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Executor</TableCell>
+                <TableCell>User</TableCell>
                 <TableCell>Contact</TableCell>
                 <TableCell>Assigned</TableCell>
                 <TableCell>Completed</TableCell>
@@ -75,8 +75,8 @@ export function ExecutorsPage() {
                       <LinearProgress variant="determinate" value={counts.percent} sx={{ mt: 0.5, height: 6, borderRadius: 99 }} />
                     </TableCell>
                     <TableCell align="right">
-                      <Tooltip title="Edit executor">
-                        <IconButton aria-label="Edit executor" onClick={() => { setEditing(executor); setFormKey((key) => key + 1); setOpen(true) }}><Pencil size={16} /></IconButton>
+                      <Tooltip title="Edit user">
+                        <IconButton aria-label="Edit user" onClick={() => { setEditing(executor); setFormKey((key) => key + 1); setOpen(true) }}><Pencil size={16} /></IconButton>
                       </Tooltip>
                     </TableCell>
                   </TableRow>
@@ -104,16 +104,16 @@ function ExecutorDialog({ open, executor, onClose }: { open: boolean; executor: 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <form onSubmit={handleSubmit((values) => { if (saveExecutor({ id: executor?.id, ...values })) onClose() })}>
-        <DialogTitle>{executor ? 'Edit executor' : 'Add executor'}</DialogTitle>
+        <DialogTitle>{executor ? 'Edit user' : 'Add user'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
               {executor
-                ? `Executor ID ${executor.executorCode} stays with this record. Leave the password blank to keep the current one.`
-                : 'The executor uses this email and password to sign in.'}
+                ? `User ID ${executor.executorCode} stays with this record. Leave the password blank to keep the current one.`
+                : 'The user uses this email and password to sign in.'}
             </Typography>
-            <TextField label="Executor name" {...fieldBind(register('name', { required: 'Executor name is required' }))} error={Boolean(errors.name)} helperText={errors.name?.message} />
-            <TextField label="Executor email" type="email" {...fieldBind(register('email', { required: 'Executor email is required' }))} error={Boolean(errors.email)} helperText={errors.email?.message} />
+            <TextField label="User name" {...fieldBind(register('name', { required: 'User name is required' }))} error={Boolean(errors.name)} helperText={errors.name?.message} />
+            <TextField label="User email" type="email" {...fieldBind(register('email', { required: 'User email is required' }))} error={Boolean(errors.email)} helperText={errors.email?.message} />
             <TextField
               label="Password"
               type="password"
@@ -125,7 +125,7 @@ function ExecutorDialog({ open, executor, onClose }: { open: boolean; executor: 
                 },
               }))}
               error={Boolean(errors.password)}
-              helperText={errors.password?.message || (executor ? 'Leave blank to keep the current password.' : 'Used to sign in as this executor.')}
+              helperText={errors.password?.message || (executor ? 'Leave blank to keep the current password.' : 'Used to sign in as this user.')}
             />
           </Stack>
         </DialogContent>

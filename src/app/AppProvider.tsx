@@ -132,7 +132,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         const executor = data.executors.find((item) => item.email.trim().toLowerCase() === normalized && item.password)
         if (executor) {
-          if (password !== executor.password) return 'Password does not match this executor.'
+          if (password !== executor.password) return 'Password does not match this user.'
           enter({ email: executor.email, role: 'executor', name: executor.name, executorId: executor.id })
           return null
         }
@@ -156,7 +156,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const next = sessionFromRole(role)
         if (!next) return
         enter(next)
-        notify(`Switched to the ${role} workspace.`, 'info')
+        notify(`Switched to the ${role === 'executor' ? 'user' : role} workspace.`, 'info')
       },
       resetData: () => {
         commit(createEmptyData(), 'Workspace cleared.')
@@ -164,7 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       saveProject: (input) => apply(saveProject(data, input, actor), input.id ? 'Project updated.' : 'Project created.'),
       saveTask: (input) => apply(saveTask(data, input, actor), input.id ? 'Task updated.' : 'Task assigned.'),
       saveExecutor: (input) =>
-        apply(saveExecutor(data, input, actor), input.id ? 'Executor updated.' : 'Executor added.'),
+        apply(saveExecutor(data, input, actor), input.id ? 'User updated.' : 'User added.'),
       saveClient: (input) => apply(saveClient(data, input, actor), input.id ? 'Client updated.' : 'Client added.'),
       startTask: (taskId) => apply(startTask(data, taskId, actor), 'Task marked in progress.'),
       submitProof: (input) => apply(submitProof(data, input, actor), 'Proof submitted for verification.'),
@@ -173,7 +173,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           reviewProof(data, input, actor),
           input.decision === 'approved'
             ? 'Proof approved. The task is completed and visible to the client.'
-            : 'Proof rejected. The executor can resubmit.',
+            : 'Proof rejected. The user can resubmit.',
         ),
     }
     // notify and commit are stable enough for this demo store; data and session drive the value.

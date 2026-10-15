@@ -11,7 +11,7 @@ export function AdminReportsPage() {
     <Stack spacing={2}>
       <PageHeader
         title="Reports"
-        subtitle="Progress by project, client, executor, location, and approval date."
+        subtitle="Progress by project, client, user, location, and approval date."
         crumbs={[{ label: 'Admin', to: '/admin' }, { label: 'Reports' }]}
       />
       <ReportView rows={rows} filename="vesne-admin-report" title="Vesne field execution report (demo)" showClientFilter />

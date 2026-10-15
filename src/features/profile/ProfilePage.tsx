@@ -21,7 +21,7 @@ export function ProfilePage() {
       <PageHeader
         title="Profile"
         subtitle="This demo account is stored in the browser. It is not a production login."
-        crumbs={[{ label: session?.role === 'client' ? 'Client' : 'Executor', to: session?.role === 'client' ? '/client' : '/executor' }, { label: 'Profile' }]}
+        crumbs={[{ label: session?.role === 'client' ? 'Client' : 'User', to: session?.role === 'client' ? '/client' : '/executor' }, { label: 'Profile' }]}
       />
       <SectionCard title="Signed-in demo user">
         <Typography><strong>Name:</strong> {session?.name}</Typography>
@@ -30,8 +30,8 @@ export function ProfilePage() {
         <Alert severity="info" sx={{ mt: 2 }}>Password changes and account recovery need a backend authentication service. Nothing on this page changes a real password.</Alert>
       </SectionCard>
       {executor && executorCounts && (
-        <SectionCard title="Executor record">
-          <Typography><strong>Executor ID:</strong> {executor.executorCode}</Typography>
+        <SectionCard title="User record">
+          <Typography><strong>User ID:</strong> {executor.executorCode}</Typography>
           <Typography><strong>Email:</strong> {executor.email}</Typography>
           <Typography sx={{ my: 1 }}>{executorCounts.completed} completed · {executorCounts.total} assigned · {performanceLabel(executorCounts.percent, executorCounts.total)}</Typography>
           <StatusBadge status={executor.status} label={executor.status === 'active' ? 'Active' : 'Inactive'} />

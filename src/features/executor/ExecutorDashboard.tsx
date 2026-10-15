@@ -22,7 +22,7 @@ export function ExecutorDashboard() {
       <PageHeader
         title={`Hello, ${session?.name.split(' ')[0]}`}
         subtitle={`${counts.total} tasks on your list. Open one to upload proof and capture location.`}
-        crumbs={[{ label: 'Executor' }, { label: 'Dashboard' }]}
+        crumbs={[{ label: 'User' }, { label: 'Dashboard' }]}
       />
       <Box sx={kpiGridSx}>
         <KpiCard tone="blue" label="Assigned" value={counts.assigned} hint="Not started" icon={<ClipboardList size={16} />} />
@@ -32,7 +32,7 @@ export function ExecutorDashboard() {
         <KpiCard tone="violet" label="Needs resubmission" value={counts.rejected} hint="Read the remarks" icon={<RotateCcw size={16} />} />
       </Box>
       {tasks.length === 0 ? (
-        <EmptyState title="No tasks assigned" body="When an admin assigns work to this executor, it will show up here." />
+        <EmptyState title="No tasks assigned" body="When an admin assigns work to this user, it will show up here." />
       ) : (
         <Stack spacing={1.25}>
           {tasks.map((task) => {
